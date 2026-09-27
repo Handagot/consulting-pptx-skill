@@ -1,6 +1,8 @@
 # consulting-pptx-skill
 
 **AIに「まじ」なPowerPointを作らせるためのClaude Codeスキル。**
+AIワークフロープラットフォーム [Jinba](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_intro) を提供するメンバーにより作成されました。
+
 スライドの設計規約（約110項目）、規約違反を見つける機械チェック、**62型のHTMLパーツ集**（基本27＋追加35）、型カタログPDFをまとめたものです。資料は HTML（16:9）で組み、Chrome で PDF に書き出します。
 
 進め方は、規約を読む → パーツ集から必要なパーツを取り出して1枚ずつ組む → 機械チェックを通す → 作り方を知らない別のエージェントにレビューさせる、の順です。
