@@ -9,6 +9,10 @@ A Claude Code skill for generating boardroom-quality decks: a slide-design ruleb
 
 私たちが実際に毎週の提案書・報告書づくりで使っている仕組みの公開版です。解説記事はこちら → [AIにまじなスライド作らせる（note）](https://note.com/jinbaflow/n/nc8372b84e572)
 
+> **企業でお使いの方へ**
+> - Claude Code を使わず、ブラウザのチャットだけで同じ仕組みを使いたい → [Jinba App](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_app)
+> - 自社の資料規約・ブランドに合わせた専用版を作りたい、社内に展開したい → [ご相談はこちら](https://jinba.io/ja/contact-sales?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_contact)
+
 ## 本質は `references/slide-rules.md`（約110項目のスライド規約）
 
 このリポジトリでいちばん価値があるのは、実はテンプレでもスクリプトでもなく、**[slide-rules.md](references/slide-rules.md)** というテキストファイルです。実務の資料レビューで受けた指摘を1行ずつ書き溜めた約110項目。「結論はタイトルに書く」「角丸禁止」「塗りのあるボックスに枠線を付けない」「1資料1用語」「前提・定義は左、帰結は右」…。
@@ -93,8 +97,10 @@ node scripts/check_layout.mjs mydeck.html           # フッター重なり・�
 
 ## About
 
-Made by [Carnot AI](https://jinba.io) — AIエージェント基盤「Jinba」を開発・提供しています。
-このスキルと同じ仕組みを、ブラウザのチャットだけで使える形（Jinba App）でも提供しています。
+Made by [Carnot AI](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about) — AIエージェント基盤「Jinba」を開発・提供しています。
+
+- **ブラウザだけで使いたい方へ**：このスキルと同じ仕組みを、チャットだけで使える形（[Jinba App](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about_app)）でも提供しています。Claude Code や Python の準備は要りません。
+- **自社専用版を作りたい企業へ**：御社の既存資料とレビュー指摘から slide-rules.md とデザインを作り込み、社内のだれもが使える形で展開するご支援をしています。[ご相談はこちら](https://jinba.io/ja/contact-sales?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about_contact)
 
 ## License
 
