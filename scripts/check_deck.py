@@ -5,6 +5,7 @@
   python3 check_deck.py out.pptx
   python3 check_deck.py deck.html
   python3 check_deck.py assets/SuperTemplate_36type.pptx --template   # テンプレ集そのものを検査するとき
+  python3 check_deck.py deck.html --forbid ~/.config/deck-forbidden-terms.txt   # 顧客名・社内語の残りを FAIL
 
 正典: references/slide-rules.md
 終了コード: FAIL があれば 1。
@@ -37,6 +38,8 @@ STRICT_LEN = True  # 互換のため残置。PPTX/HTMLとも2行許容（>80字�
 
 # 表記ゆれ代表ペア（slide-rules §7.6: 1資料1用語）。両方の表記が同一資料に現れたら WARN。
 # (ラベルA, パターンA, ラベルB, パターンB)
+PART_TYPE_NAMES = set()
+
 TERM_VARIANTS = [
     ("メモリー", r"メモリー", "メモリ", r"メモリ(?!ー)(?!・CPU)"),  # 計算機の「メモリ・CPU」は除外
     ("紐付", r"紐付", "紐づ", r"紐づ"),
@@ -84,6 +87,83 @@ def check_terms(pages):
         hits_b = sorted({i for i, t in pages if re.search(pb, t)})
         if hits_a and hits_b:
             warn(f"表記ゆれ疑い: 「{la}」p{hits_a} と「{lb}」p{hits_b} が混在（§7.6 1資料1用語。別概念なら可・目視確認）")
+
+# --- 本文のプレースホルダー残り（slide-rules §2.8 / README）-------------------------
+# タイトルだけでなく本文・表・カードに「Text N」「ラベル N」「YYYY」「パーツNN｜」が残っていたら FAIL。
+# 型名をそのままタイトルにしたページ（例:「軸のある表」）も FAIL。
+BODY_PLACEHOLDER = re.compile(
+    r"Text\s*\d+|ラベル\s*\d+|タイトル\s*\d+|Source\s*\d+|YYYY|パーツ\s*\d+\s*[｜|]|ダミー|^会社名$|^連絡先$")
+
+
+def _part_type_names():
+    """パーツ集の型名（new_deck.py --list と同じ並び）。テンプレが無い環境では空。"""
+    names = set()
+    root = Path(__file__).resolve().parent.parent / "templates"
+    for f in ("freeform_parts_16x9.html", "freeform_parts_more_16x9.html"):
+        fp = root / f
+        if not fp.exists():
+            continue
+        for m in re.finditer(r"パーツ\s*\d+\s*[｜|]\s*([^<]+)<", fp.read_text(encoding="utf8", errors="ignore")):
+            names.add(m.group(1).strip())
+    return names
+
+
+def check_body_placeholders(idx, leaf_texts, title):
+    if TEMPLATE_MODE:
+        return
+    hits = sorted({t for t in leaf_texts if BODY_PLACEHOLDER.search(t)})
+    if hits:
+        fail(f"p{idx}: 本文にテンプレのプレースホルダーが残っている ×{len(hits)}: {' / '.join(h[:20] for h in hits[:4])}")
+    if title and title.strip() in PART_TYPE_NAMES:
+        fail(f"p{idx}: タイトルがパーツの型名のまま「{title.strip()}」（主張文に書き換える — §2.8）")
+
+
+# --- 1ブロック1文（文章を連続して詰め込まない）------------------------------------
+# スライドの1つの文章塊（セル・カード本文・段落・箇条1行）に2文以上を入れない。
+# 2文以上になる中身は1項目1文の箇条に分ける。機械判定は「句点で終わる文が2つ以上」。
+SENTENCE_END = re.compile(r"[。！？!?](?=\s*\S)")
+
+
+def check_multi_sentence(idx, leaf_texts):
+    bad = []
+    for t in leaf_texts:
+        if t.startswith(("出典", "注", "※", "Source")):
+            continue  # 出典・注記行は対象外
+        core = re.sub(r"（[^）]*）|\([^)]*\)|「[^」]*」", "", t)  # 括弧・引用内の句点は数えない
+        if len(SENTENCE_END.findall(core.strip())) >= 1:
+            bad.append(t)
+    if bad:
+        fail(f"p{idx}: 1つの文章塊に2文以上 ×{len(bad)}: 「{bad[0][:36]}…」（1項目1文の箇条に分ける。動きはきっかけ→起きること→判断→結果の順）")
+
+
+# --- 禁止語（顧客名・社内語・案件コード）-------------------------------------------
+# 公開・社外共有前に、資料ごとに出してはいけない語を外部ファイルで渡す（リポジトリには入れない）。
+#   python3 check_deck.py deck.html --forbid ~/.config/deck-forbidden-terms.txt
+# 1行1語。# で始まる行はコメント。re: で始めると正規表現。
+FORBIDDEN_TERMS = []
+
+
+def load_forbidden(path):
+    terms = []
+    for line in Path(path).expanduser().read_text(encoding="utf8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        terms.append(re.compile(line[3:]) if line.startswith("re:") else re.compile(re.escape(line)))
+    return terms
+
+
+def check_forbidden(pages, raw=""):
+    if not FORBIDDEN_TERMS:
+        return
+    for pat in FORBIDDEN_TERMS:
+        hit_pages = sorted({i for i, t in pages if pat.search(t)})
+        in_markup = bool(raw and pat.search(re.sub(r">[^<]*<", "><", raw)))  # コメント・属性・alt 等
+        if hit_pages or in_markup:
+            where = f"p{hit_pages}" if hit_pages else "HTMLのコメント/属性"
+            # 語そのものは出力に出さない（ログ経由の再流出を防ぐ）
+            fail(f"禁止語リストの語が {where} に残っている（リスト{FORBIDDEN_TERMS.index(pat)+1}行目の語）")
+
 
 def check_title(idx, title, explicit_break=False):
     # explicit_break: 意味の切れ目で明示改行済み（§2.13）なら2行想定の WARN は出さない
@@ -348,6 +428,21 @@ def check_kicker_and_conclusion(html):
         warn(f"左右カラムの見出しが接続詞で始まる ×{len(dakara)}（§4.49: 2コンテンツの見出しは単独で読める名詞句に）")
 
 
+def _leaf_texts(fragment):
+    """スライド内の文章塊（ブロック要素ごとのテキスト）。<br> と箇条記号「•」は区切りとして扱う。"""
+    frag = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", fragment, flags=re.S)
+    frag = re.sub(r"<!--.*?-->", " ", frag, flags=re.S)
+    frag = re.sub(r"<br\s*/?>", "\n", frag)
+    blocks = re.split(r"</?(?:div|p|li|td|th|h[1-6]|section|ul|ol|tr|table)\b[^>]*>", frag)
+    out = []
+    for b in blocks:
+        for piece in re.split(r"\n|•", re.sub(r"<[^>]+>", "", b)):
+            piece = re.sub(r"\s+", " ", piece).strip()
+            if piece:
+                out.append(piece)
+    return out
+
+
 def check_html(path):
     global STRICT_LEN
     STRICT_LEN = False
@@ -416,6 +511,7 @@ def check_html(path):
     pat = r'<(?:section|div)[^>]*class="(?:[^"]*\bslide\b[^"]*|s|s [^"]*)"[^>]*>'
     parts = re.split(pat, html)
     slides = parts[1:] if len(parts) > 1 else []
+    slide_classes = re.findall(pat.replace('class="(?:', 'class="((?:', 1).replace(')"[^>]*>', '))"[^>]*>', 1), html)
     for i, s in enumerate(slides, 1):
         m = re.search(r"<h1[^>]*>(.*?)</h1>", s, re.S) or re.search(r'class="[^"]*\b(?:ttl|title|msg)\b[^"]*"[^>]*>(.*?)</', s, re.S)
         t = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else ""
@@ -423,11 +519,16 @@ def check_html(path):
         titles.append(t)
         check_title(i, t)
         check_count_match(i, t, re.sub(r"<[^>]+>", " ", s))
+        leaves = _leaf_texts(s)
+        check_body_placeholders(i, leaves, t)
+        if "cover" not in (slide_classes[i - 1] if i - 1 < len(slide_classes) else ""):
+            check_multi_sentence(i, leaves)
     if not slides:
         warn("`.slide` 要素が見つからない（タイトル検査スキップ）")
     if slides:
         check_terms([(i, re.sub(r"<[^>]+>", " ", s)) for i, s in enumerate(slides, 1)])
         check_ai_smell([(i, re.sub(r"<[^>]+>", " ", s)) for i, s in enumerate(slides, 1)])
+        check_forbidden([(i, re.sub(r"<[^>]+>", " ", s)) for i, s in enumerate(slides, 1)], html)
     else:
         check_terms([(1, re.sub(r"<[^>]+>", " ", html))])
         check_ai_smell([(1, re.sub(r"<[^>]+>", " ", html))])
@@ -437,9 +538,15 @@ def check_html(path):
 def main():
     global TEMPLATE_MODE
     args = sys.argv[1:]
+    global FORBIDDEN_TERMS, PART_TYPE_NAMES
     if "--template" in args:
         TEMPLATE_MODE = True
         args.remove("--template")
+    if "--forbid" in args:
+        k = args.index("--forbid")
+        FORBIDDEN_TERMS = load_forbidden(args[k + 1])
+        del args[k:k + 2]
+    PART_TYPE_NAMES = _part_type_names()
     if not args:
         sys.exit(__doc__)
     p = args[0]

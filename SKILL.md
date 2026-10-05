@@ -22,7 +22,8 @@ description: スライド設計規約 slide-rules.md（実務レビュー由来�
 | `assets/SlideCatalog_16x9.pdf` | 両パーツ集を印刷した62ページ（P.1〜27 基本、P.28〜62 追加） | 型を目で探すとき |
 | `scripts/new_deck.py` | パーツ番号を並べて1本のHTMLを生成 | 手順3 |
 | `scripts/check_deck.py` | 規約の機械チェック（HTML は標準ライブラリのみ） | 手順6 |
-| `scripts/check_layout.mjs` | 重なり・はみ出しの実レンダリング検査（`npm run setup` で playwright を入れる） | 手順7 |
+| `scripts/check_layout.mjs` | 重なり・はみ出し・空きの多いページの実レンダリング検査（`npm run setup` で playwright を入れる） | 手順7 |
+| `tests/test_checks.py` | 機械チェックの自己テスト（直していない版で発火し、直した版で通ることを確認） | 機械チェックを足した・直したとき |
 | `assets/SuperTemplate_62type.pptx` | 62型のPPTX見本帳（全スライド編集可能） | PPTX が要るとき |
 
 ## 規約の要点（入口。全文は必ず読む）
@@ -49,9 +50,10 @@ description: スライド設計規約 slide-rules.md（実務レビュー由来�
    ```
    両パーツ集のCSS結合・見出し様式の統一・ページ番号の振り直しはスクリプトが行う。手でコピーして組まない。生成後、プレースホルダー（`Text N` / `ラベル N` / `YYYY`）を実物に差し替える。
 4. **グラフが要るページは、表パーツに流し込まず自分で描く。**
-5. **調整**: 表を2枚に割る、右カラムを帰結形に書き直す、粒度の揃わない並列を書き直す。1枚ごとに「この型のままでよいか」を疑う。受けた指摘は slide-rules.md に1行追記する。
-6. `python3 scripts/check_deck.py mydeck.html` → FAIL 0（表紙・裏表紙・章扉の「タイトル空」WARN は許容）。出力されるタイトル一覧を通し読みする。
-7. `node scripts/check_layout.mjs mydeck.html` → OK（playwright が別の場所にあるなら `PLAYWRIGHT_MODULE_DIR` で指す）。
+5. **調整**: 表を2枚に割る、右カラムを帰結形に書き直す、粒度の揃わない並列を書き直す。1枚ごとに「この型のままでよいか」を疑う。受けた指摘は slide-rules.md に1行追記し、測れる指摘は機械チェックにもする（slide-rules §8「指摘は規約1行と機械チェックの両方にする」）。
+6. `python3 scripts/check_deck.py mydeck.html` → FAIL 0（表紙・裏表紙・章扉の「タイトル空」WARN は許容）。出力されるタイトル一覧を通し読みする。本文に残ったプレースホルダー、型名のままのタイトル、2文以上詰めた文章塊も FAIL になる。
+   - 社外に出すデッキは、顧客名・社内語・案件コードを1行1語で書いたリスト（リポジトリの外に置く）を当てる: `python3 scripts/check_deck.py mydeck.html --forbid ~/.config/deck-forbidden-terms.txt`。HTMLコメントや属性に残った語も拾い、語そのものは出力に出さない。
+7. `node scripts/check_layout.mjs mydeck.html` → OK（playwright が別の場所にあるなら `PLAYWRIGHT_MODULE_DIR` で指す）。版面の40%超が空いたページも FAIL になる。
 8. **フレッシュアイ・レビュー**: `references/content-review-prompt.md` の指示文を、作り方を伏せた別のエージェントに渡してデッキのファイルを読ませる。指摘を採否表（採用／不採用／保留＋理由）にし、採用分だけ直して手順6・7を再実行する。
 9. **PDF 化して全ページ目視する。** 機械チェックは重なり・はみ出し・規約違反しか見ない。棒が潰れる、図が空になる、下半分が空く、泣き別れ、左右の下端不揃いは目視でしか分からない。パーツのCSSは自分のデッキ側で直してよい（直したら templates/ にも反映する）。
    ```bash
