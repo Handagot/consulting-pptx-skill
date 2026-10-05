@@ -1,11 +1,11 @@
 ---
 name: consulting-pptx-skill
-description: スライド設計規約 slide-rules.md（実務レビュー由来・約80項目の正典）を核に、経営会議品質のスライドを作るスキル。作成前に規約を読み、HTMLパーツ集（基本27＋追加35の62型）から該当パーツをコピーして組み、規約の範囲で型に囚われず調整し、check_deck.py の機械チェック FAIL 0 で仕上げる。型カタログはレイアウトの発想帳であり、合わせる対象ではない。トリガー例:「コンサル品質のスライドを作って」「規約に沿ったデッキで」「型カタログから選んで」。
+description: スライド設計規約 slide-rules.md を核に、経営会議品質のスライドを作るスキル。作成前に規約を読み、HTMLパーツ集（基本27＋追加35の62型）から該当パーツをコピーして組み、規約の範囲で型に囚われず調整し、check_deck.py の機械チェック FAIL 0 で仕上げる。型カタログはレイアウトの発想帳であり、合わせる対象ではない。トリガー例:「コンサル品質のスライドを作って」「規約に沿ったデッキで」「型カタログから選んで」。
 ---
 
 # コンサル型スライド作成スキル
 
-主軸は `references/slide-rules.md`（実務のレビュー指摘を1行ずつ蓄積した約80項目の規約）。作成前に全文を読み、HTMLパーツ集でたたき台を組み、規約の範囲で調整し、機械チェック FAIL 0 と目視で仕上げる。パーツ集と型カタログは規約を効率よく満たす道具であり、**スライドを型に合わせるのではなく、型をストーリーに合わせて選び、合わなければ捨てて自由に組む。**
+主軸は `references/slide-rules.md`。作成前に全文を読み、HTMLパーツ集でたたき台を組み、規約の範囲で調整し、機械チェック FAIL 0 と目視で仕上げる。パーツ集と型カタログは規約を効率よく満たす道具であり、**スライドを型に合わせるのではなく、型をストーリーに合わせて選び、合わなければ捨てて自由に組む。**
 
 成果物は HTML（16:9・1 section = 1スライド）と、Chrome で印刷した PDF。
 
@@ -13,7 +13,7 @@ description: スライド設計規約 slide-rules.md（実務レビュー由来�
 
 | ファイル | 中身 | 読む・使うタイミング |
 | --- | --- | --- |
-| `references/slide-rules.md` | 規約の正典（約80項目） | **必読。作成前に全文** |
+| `references/slide-rules.md` | 規約の正典 | **必読。作成前に全文** |
 | `references/archetype-catalog.md` | 62型の一覧（型ID・型名・使いどころ・どのパーツ集の何番か） | ストーリーラインの各行に見せ方を書くとき |
 | `references/content-review-prompt.md` | フレッシュアイ・レビューの指示文 | 機械チェック通過後、納品前 |
 | `references/ai-smell-lexicon.md` | AI臭ワード・言い回しのリスト | 文章の仕上げ時 |
@@ -24,7 +24,8 @@ description: スライド設計規約 slide-rules.md（実務レビュー由来�
 | `scripts/check_deck.py` | 規約の機械チェック（HTML は標準ライブラリのみ） | 手順6 |
 | `scripts/check_layout.mjs` | 重なり・はみ出し・空きの多いページの実レンダリング検査（`npm run setup` で playwright を入れる） | 手順7 |
 | `tests/test_checks.py` | 機械チェックの自己テスト（直していない版で発火し、直した版で通ることを確認） | 機械チェックを足した・直したとき |
-| `assets/SuperTemplate_62type.pptx` | 62型のPPTX見本帳（全スライド編集可能） | PPTX が要るとき |
+| `scripts/html_to_pptx.py` | 仕上げた HTML を編集できる PPTX に変換（`html_dump.mjs`・`lib_cdp.mjs` を使う） | ユーザーが PPTX を明示したときだけ |
+| `assets/SuperTemplate_62type.pptx` | 62型のPPTX見本帳（全スライド編集可能） | PPTX を手で組むとき |
 
 ## 規約の要点（入口。全文は必ず読む）
 
@@ -63,11 +64,20 @@ description: スライド設計規約 slide-rules.md（実務レビュー由来�
 
 ## PowerPoint（.pptx）が要るとき
 
-HTML から編集可能な PPTX への変換はこのスキルに含めない。次のどれかにする:
+**資料は HTML で仕上げる。PPTX にするのは、ユーザーが「PPTX で」「パワポにして」と明示したときだけ。** 修正・レビューの往復はすべて HTML 上で回し、変換は最後に1回だけにする。HTML のほうが直すのも機械チェックも速く、PPTX で直すと HTML と中身がずれる。PPTX を渡した後に修正が来たら、HTML を直して変換し直す。明示が無ければ PDF で渡す。
 
-- **PDF で渡す**（まずこれを提案する）
-- **見本帳から手で組む**: `assets/SuperTemplate_62type.pptx` の該当スライドを PowerPoint でコピーして文言を差し替える
-- **旧パイプライン**: JSON（SlideSpec）から編集可能PPTXを書き出す仕組みを git タグ `pipeline-archived` の時点のリポジトリに残してある。62型に対応するが、JSONで書き直す手間と型の枠に収まらないページが出る
+1. HTML で手順6〜9（機械チェック FAIL 0・フレッシュアイ・レビュー・PDF 目視）まで済ませる
+2. 変換: `python3 scripts/html_to_pptx.py mydeck.html` → 同じフォルダに mydeck.pptx（Node 22+・Chrome・`pip3 install python-pptx` が必要）
+3. `python3 scripts/check_deck.py mydeck.pptx` を FAIL 0 に。PowerPoint で開いて（または PDF に書き出して）文字の折り返しと重なりを目視する
+4. 社外に送るなら、ファイルのプロパティ（作成者・会社名など）を消す
+
+変換の中身と限界（詳細は slide-rules.md §8.6）:
+- 編集できる形で再現: 文字（書体・大きさ・色・行間・折り返し幅・箇条書き書式）、塗りと枠（角丸・clip-path の多角形・CSS の三角形）、罫線、表（結合セル・セルの塗り・罫線・余白・縦書き）
+- 画像になる（中の文字や数値は編集できない）: SVG のチャート・図、img、背景画像
+- 書体は和文ゴシック＝Yu Gothic、明朝＝Yu Mincho に置き換える。字幅の差で行末が1字ずれることがあるので目視は省かない
+- 再現しない: 回転・変形（CSS の transform）、`::before`/`::after` で描いた装飾（背景付きの丸数字など。行頭記号の文字は箇条書き書式として再現する）。これらはパーツ側で使わないか、変換後に PowerPoint で直す
+
+PPTX を一から手で組むときの見本として `assets/SuperTemplate_62type.pptx`（62型・全スライド編集可能）も置いてある。
 
 ## 本スキル使用の注釈
 
