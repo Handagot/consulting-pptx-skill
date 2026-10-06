@@ -1,6 +1,6 @@
 ---
 name: consulting-pptx-skill
-description: スライド設計規約 slide-rules.md を核に、経営会議品質のスライドを作るスキル。作成前に規約を読み、HTMLパーツ集（基本27＋追加35の62型）から該当パーツをコピーして組み、規約の範囲で型に囚われず調整し、check_deck.py の機械チェック FAIL 0 で仕上げる。型カタログはレイアウトの発想帳であり、合わせる対象ではない。トリガー例:「コンサル品質のスライドを作って」「規約に沿ったデッキで」「型カタログから選んで」。
+description: スライド設計規約 slide-rules.md を核に、経営会議品質のスライドを作るスキル。作成前に規約を読み、HTMLパーツ集（基本27＋追加35の62型）から該当パーツをコピーして組み、規約の範囲で型に囚われず調整し、check_deck.py の機械チェック FAIL 0 で仕上げる。型カタログはレイアウトの発想帳であり、合わせる対象ではない。既存の PowerPoint 資料を渡され、そこへ差し込むページを PPTX で求められたときだけ、その資料のマスターの上に直接組む（slide-rules §8.7）。トリガー例:「コンサル品質のスライドを作って」「規約に沿ったデッキで」「型カタログから選んで」「この pptx に足すページを同じ書式で」。
 ---
 
 # コンサル型スライド作成スキル
@@ -26,6 +26,8 @@ description: スライド設計規約 slide-rules.md を核に、経営会議品
 | `tests/test_checks.py` | 機械チェックの自己テスト（直していない版で発火し、直した版で通ることを確認） | 機械チェックを足した・直したとき |
 | `scripts/html_to_pptx.py` | 仕上げた HTML を編集できる PPTX に変換（`html_dump.mjs`・`lib_cdp.mjs` を使う） | ユーザーが PPTX を明示したときだけ |
 | `assets/SuperTemplate_62type.pptx` | 62型のPPTX見本帳（全スライド編集可能） | PPTX を手で組むとき |
+| `scripts/measure_deck.py` | 既存の PowerPoint 資料の書式を測って `skin.json` に書き出す | 既存の資料へ差し込むページを作るとき（最初に）|
+| `scripts/deck_pptx.py` | その資料のマスターの上に、同じ書式のページを組む部品（作例は `examples/house_deck_example.py`） | 同上 |
 
 ## 規約の要点（入口。全文は必ず読む）
 
@@ -78,6 +80,16 @@ description: スライド設計規約 slide-rules.md を核に、経営会議品
 - 再現しない: 回転・変形（CSS の transform）、`::before`/`::after` で描いた装飾（背景付きの丸数字など。行頭記号の文字は箇条書き書式として再現する）。これらはパーツ側で使わないか、変換後に PowerPoint で直す
 
 PPTX を一から手で組むときの見本として `assets/SuperTemplate_62type.pptx`（62型・全スライド編集可能）も置いてある。
+
+### 既存の資料へ差し込むページ
+
+入れる先の PowerPoint 資料（社内の標準デッキ・作りかけの提案書）を渡されたときは、変換せずに **その資料のマスターの上で直接組む**。変換した PPTX は書体と版面が自前なので、差し込むと浮く（slide-rules §8.7）。文章・表の軸・1枚1メッセージの規約はそのまま。
+
+1. 測る: `python3 scripts/measure_deck.py house.pptx` → `house.skin.json`。要約を読み、資料を目で見て値を直す
+2. 組む: `examples/house_deck_example.py` を手本に `scripts/deck_pptx.py` で組む。書体・地色・ページ番号をスライドに書かない／タイトルはプレースホルダー／表はテキストボックス＋罫線（`table()`）／色は資料のテーマ色
+3. `python3 scripts/check_deck.py pages.pptx --house house.skin.json` → FAIL 0。**PowerPoint で開く前に必ず通す**（不正なファイルを開かせると、ユーザーの PowerPoint に修復のダイアログが残る）
+4. 全ページを目視する（手段は slide-rules §8 の目視QAと同じ）
+5. 渡すのは差し込むページだけのファイル。資料へ入れるのはユーザー（「貼り付け先のテーマを使用」）
 
 ## 本スキル使用の注釈
 
