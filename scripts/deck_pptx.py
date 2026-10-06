@@ -17,6 +17,7 @@ HTML→PPTX の変換（html_to_pptx.py）は書体と版面を自前で決め�
   - タイトルと副題はレイアウトのプレースホルダーに入れる
   - 表はテキストボックスと罫線で組む（見出しは太字＋下に罫線、行の間に細い罫線、セルは塗らない — §6）
   - 色は "accent2" や "accent2|lumMod=20000|lumOff=80000" のようにテーマ色で渡す。HEX は 6 桁
+  - 資料が役割ごとに複数の色を使い分けているときは d.c("emphasis", 1) のように候補から選ぶ（measure_deck の color_options）
 依存: python-pptx。
 """
 import json
@@ -42,8 +43,8 @@ DEFAULT_SKIN = {
     "subtitle": None, "margin": {"x0": 0.5, "x1": 12.83, "body_top": 1.4, "bottom": 6.9},
     "sizes": {"head": 18, "body": 14, "dense": 12}, "fonts": {"inherit": True, "explicit": None},
     "textbox": {"insets": [0, 0, 0, 0], "lst_style": None, "bullet_level": None},
-    "rule": {"color": "7F7F7F", "row": 0.5, "head": 1.0}, "tables": {"native": 0},
-    "colors": {"emphasis": "accent1", "panel": "accent1|lumMod=20000|lumOff=80000", "accent": "accent1"},
+    "rule": {"color": "bg1|lumMod=50000", "row": 0.5, "head": 1.0}, "tables": {"native": 0},
+    "colors": {"emphasis": "accent1", "panel": "accent1|lumMod=20000|lumOff=80000", "accent": "accent1", "ng": "FF0000"},
     "page_number": "none",
 }
 
@@ -114,11 +115,17 @@ class Deck:
         self.x0, self.x1, self.top, self.bottom = m["x0"], m["x1"], m.get("body_top") or 1.4, m["bottom"]
         self.sz_head, self.sz_body, self.sz_dense = z["head"], z["body"], z["dense"]
         self.colors = dict(DEFAULT_SKIN["colors"], **{k: v for k, v in skin["colors"].items() if v})
+        self.color_options = skin.get("color_options") or {}
         self.rule_color, self.rule_row, self.rule_head = skin["rule"]["color"], skin["rule"]["row"], skin["rule"]["head"]
         self.font = None if skin["fonts"]["inherit"] else skin["fonts"].get("explicit")
         self.insets = tuple(skin["textbox"]["insets"])
         self.lst_style = skin["textbox"].get("lst_style")
         self.bullet_level = skin["textbox"].get("bullet_level")
+
+    def c(self, role, i=0):
+        """役割（emphasis / panel / accent）の i 番目の候補の色。候補が足りなければ既定の色。"""
+        opts = self.color_options.get(role) or []
+        return opts[i] if i < len(opts) else self.colors[role]
 
     # ------------------------------------------------------------ デッキとスライド
     def _drop_slides(self):
@@ -375,8 +382,8 @@ class Deck:
             self.poly(g, [(x + 0.08 * s, y + 0.52 * s), (x + 0.38 * s, y + 0.84 * s), (x + 0.94 * s, y + 0.16 * s)],
                       self.colors["emphasis"], 2.25)
         elif kind == "ng":   # 意味を持つ赤はブランドに寄せない（§5.8）
-            self.line(g, x + 0.14 * s, y + 0.14 * s, x + 0.86 * s, y + 0.86 * s, "FF0000", 2.0)
-            self.line(g, x + 0.86 * s, y + 0.14 * s, x + 0.14 * s, y + 0.86 * s, "FF0000", 2.0)
+            self.line(g, x + 0.14 * s, y + 0.14 * s, x + 0.86 * s, y + 0.86 * s, self.colors["ng"], 2.0)
+            self.line(g, x + 0.86 * s, y + 0.14 * s, x + 0.14 * s, y + 0.86 * s, self.colors["ng"], 2.0)
         else:
             self.box(g, x + 0.08 * s, y + 0.12 * s, 0.84 * s, 0.76 * s, stroke=self.rule_color, lw=1.5,
                      kind=MSO_SHAPE.ISOSCELES_TRIANGLE)

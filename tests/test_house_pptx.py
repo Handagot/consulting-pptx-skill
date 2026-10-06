@@ -47,6 +47,10 @@ def make_house(path):
             body = s.shapes.add_textbox(Inches(0.5), Inches(2.2 + 0.6 * i), Inches(8), Inches(0.4))
             r = body.text_frame.paragraphs[0].add_run()
             r.text, r.font.size = "本文の行は 14pt で、書体を指定していない", Pt(14)
+            if i:   # 強調は 2 色を使い分ける。accent2 と同じ HEX（C0504D）を多めに、テーマに無い HEX（2E8B57）を少なめに
+                r = body.text_frame.paragraphs[0].add_run()
+                r.text, r.font.size = ("強調の語" if i == 1 else "別の強調"), Pt(14)
+                r.font.color.rgb = RGBColor(0xC0, 0x50, 0x4D) if i == 1 or n < 2 else RGBColor(0x2E, 0x8B, 0x57)
             ln = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(0.5), Inches(2.1 + 0.6 * i), Inches(12.8), Inches(2.1 + 0.6 * i))
             ln.line.color.rgb, ln.line.width = RGBColor(0x80, 0x80, 0x80), Pt(1.0 if i == 0 else 0.5)
     prs.save(str(path))
@@ -95,7 +99,8 @@ class HouseDeck(unittest.TestCase):
         self.assertEqual(k["layout"], "Title Only")
         self.assertTrue(k["fonts"]["inherit"])
         self.assertEqual((k["sizes"]["body"], k["sizes"]["head"]), (14.0, 20.0))
-        self.assertEqual((k["rule"]["color"], k["rule"]["row"], k["rule"]["head"]), ("808080", 0.5, 1.0))
+        # 罫線は HEX（808080）で書かれているが、テーマの bg1 を 50% 暗くした色と一致するのでテーマ色で持つ
+        self.assertEqual((k["rule"]["color"], k["rule"]["row"], k["rule"]["head"]), ("bg1|lumMod=50000", 0.5, 1.0))
         self.assertEqual(k["tables"]["native"], 0)
         self.assertEqual((k["margin"]["x0"], k["margin"]["x1"]), (0.5, 12.83))
 
@@ -110,7 +115,34 @@ class HouseDeck(unittest.TestCase):
             xml = "".join(z.read(n).decode("utf8") for n in z.namelist() if n.startswith("ppt/slides/slide"))
         self.assertNotIn("<a:latin", xml)   # 書体は run に書かない
         self.assertNotIn("<a:tbl>", xml)    # 表はテキストボックス＋罫線
-        self.assertIn('<a:srgbClr val="808080"/>', xml)   # 罫線は資料の色
+        self.assertNotIn('<a:srgbClr val="808080"/>', xml)   # 罫線は資料の色を、テーマ色として書く
+        self.assertIn('<a:schemeClr val="bg1"><a:lumMod val="50000"/></a:schemeClr>', xml)
+
+    def test_colors_keep_several_options_and_follow_the_theme(self):
+        k = self.skin
+        self.assertEqual(k["color_options"]["emphasis"], ["accent2", "2E8B57"])   # 多い順。テーマ色と一致する HEX は読み替える
+        self.assertEqual(k["colors"]["emphasis"], "accent2")
+        self.assertEqual(k["colors"]["ng"], "FF0000")
+        from deck_pptx import Deck
+        d = Deck(self.house, self.skin)
+        self.assertEqual((d.c("emphasis"), d.c("emphasis", 1), d.c("emphasis", 5)), ("accent2", "2E8B57", "accent2"))
+
+    def test_to_theme_reads_tints(self):
+        from measure_deck import to_theme
+        theme = {"tx1": "000000", "bg1": "FFFFFF", "accent1": "4F81BD"}
+        self.assertEqual(to_theme("4F81BD", theme), "accent1")
+        self.assertEqual(to_theme("DCE6F2", theme), "accent1|lumMod=20000|lumOff=80000")   # 「明るく 80%」
+        self.assertEqual(to_theme("123456", theme), "123456")                              # テーマに無い色はそのまま
+        self.assertEqual(to_theme("accent3", theme), "accent3")
+
+    def test_ng_color_comes_from_skin(self):
+        from deck_pptx import Deck
+        d = Deck(None, dict(self.skin, colors=dict(self.skin["colors"], ng="C00000")))
+        s = d.slide("✕ の色は skin で変えられる")
+        d.mark(s, "ng", 1, 2)
+        xml = s._element.xml
+        self.assertIn('val="C00000"', xml)
+        self.assertNotIn('val="FF0000"', xml)
 
     def test_bad_theme_color_fires(self):
         bad = patched(self.pages, self.d / "bad_color.pptx", '<a:schemeClr val="accent1"', '<a:schemeClr val="FFC000"')

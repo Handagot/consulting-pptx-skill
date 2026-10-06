@@ -67,7 +67,8 @@ def check_house(idx, slide, xml):
     if 'type="slidenum"' in xml and HOUSE.get("page_number") == "layout":
         warn(f"p{idx}: ページ番号をスライドに置いている（資料はレイアウトが出すので二重になる — §8.7）")
     used = set(v.upper() for v in re.findall(r'<a:srgbClr val="([0-9A-Fa-f]{6})"', xml)) | set(re.findall(r'<a:schemeClr val="([^"]+)"', xml))
-    extra = sorted(used - set(HOUSE.get("palette") or used) - {"FF0000", "FFFFFF", "000000", "bg1", "tx1"})
+    ng = (HOUSE.get("colors") or {}).get("ng") or "FF0000"
+    extra = sorted(used - set(HOUSE.get("palette") or used) - {ng.split("|")[0].upper(), "FF0000", "FFFFFF", "000000", "bg1", "tx1"})
     if extra:
         warn(f"p{idx}: 資料に無い色 {extra[:6]}（資料のテーマ色から選ぶ — §8.7）")
 

@@ -9,10 +9,14 @@
 測るのは、本文ページで最も使われているレイアウトとタイトル・副題の枠、文字の大きさ、書体を run に直指定しているか、
 テキストボックスの余白と段組み（lstStyle）、罫線の色と太さ、表オブジェクトの有無、強調と面の色、ページ番号の出どころ。
 
-値は「最も多いもの」を機械的に拾った出発点。資料を目で見て skin.json を直してから使う（slide-rules §8.7）。
+色は役割（強調・面・丸）ごとに多い順で 3 つまで候補を残し（color_options）、組む側で選べる。
+資料が HEX で書いた色でも、テーマ色かその明暗（PowerPoint の「明るく 40%」等）と一致すればテーマ色に置き換える。
+こうしておくと、差し込んだ先のテーマが変わっても色が付いてくる。
+値は機械的に拾った出発点。資料を目で見て確かめてから使う（slide-rules §8.7）。
 依存: python-pptx。
 """
 import collections
+import colorsys
 import json
 import re
 import sys
@@ -23,6 +27,12 @@ EMU = 914400
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 P = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
 NEUTRAL = {"tx1", "bg1", "dk1", "lt1", "000000", "FFFFFF"}
+NG_RED = "FF0000"   # ✕ の赤。意味を持つ赤はブランドに寄せない（§5.8）。skin の colors.ng で変えられる
+# PowerPoint の色の選択肢に並ぶ明暗（lumMod, lumOff）。HEX の色をテーマ色に読み替えるときに試す
+TINTS = [(None, None), (20000, 80000), (40000, 60000), (60000, 40000), (75000, None), (50000, None),
+         (50000, 50000), (65000, 35000), (75000, 25000), (85000, 15000), (95000, 5000),
+         (95000, None), (85000, None), (65000, None), (90000, None)]
+SLOTS = ("tx1", "bg1", "tx2", "bg2", "accent1", "accent2", "accent3", "accent4", "accent5", "accent6")
 
 
 def inch(v):
@@ -41,6 +51,37 @@ def color_spec(el):
     if c.tag == A + "srgbClr":
         name = name.upper()
     return "|".join([name] + [f"{ch.tag[len(A):]}={ch.get('val')}" for ch in c if ch.tag[len(A):] != "alpha"])
+
+
+def theme_colors(theme_xml, master_xml):
+    """スライドで使う名前（tx1・accent2 等）→ その資料のテーマでの HEX。マスターの clrMap を通して引く。"""
+    slots = {}
+    for slot, body in re.findall(r"<a:(dk1|lt1|dk2|lt2|accent\d|hlink|folHlink)>(.*?)</a:\1>", theme_xml, re.S):
+        m = re.search(r'(?:srgbClr val|lastClr)="([0-9A-Fa-f]{6})"', body)
+        if m:
+            slots[slot] = m.group(1).upper()
+    cmap = dict(re.findall(r'\b(bg1|tx1|bg2|tx2)="(\w+)"', (re.search(r"<p:clrMap[^>]*>", master_xml) or [""])[0]))
+    cmap = {**{"bg1": "lt1", "tx1": "dk1", "bg2": "lt2", "tx2": "dk2"}, **cmap}
+    return {name: slots.get(cmap.get(name, name)) for name in SLOTS if slots.get(cmap.get(name, name))}
+
+
+def _tint(hexv, mod, off):
+    r, g, b = (int(hexv[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    l = min(1.0, max(0.0, l * (mod or 100000) / 100000 + (off or 0) / 100000))
+    return tuple(round(v * 255) for v in colorsys.hls_to_rgb(h, l, s))
+
+
+def to_theme(spec, theme):
+    """HEX の色（"808080"）が、テーマ色かその明暗と一致すればテーマ色の書き方に直す。一致しなければそのまま。"""
+    if not spec or not re.fullmatch(r"[0-9A-F]{6}", spec):
+        return spec
+    want = tuple(int(spec[i:i + 2], 16) for i in (0, 2, 4))
+    for mod, off in TINTS:
+        for name, hexv in theme.items():
+            if max(abs(a - b) for a, b in zip(_tint(hexv, mod, off), want)) <= 2:
+                return "|".join([name] + ([f"lumMod={mod}"] if mod else []) + ([f"lumOff={off}"] if off else []))
+    return spec
 
 
 def top(counter, skip=(), n=1):
@@ -182,6 +223,8 @@ def measure(path):
     with zipfile.ZipFile(path) as z:
         names = [n for n in z.namelist() if re.match(r"ppt/theme/theme\d+\.xml$", n)]
         theme = z.read(sorted(names)[0]).decode("utf8", "ignore") if names else ""
+        masters = sorted(n for n in z.namelist() if re.match(r"ppt/slideMasters/slideMaster\d+\.xml$", n))
+        master = z.read(masters[0]).decode("utf8", "ignore") if masters else ""
         layouts_xml = " ".join(z.read(n).decode("utf8", "ignore") for n in z.namelist()
                                if n.startswith(("ppt/slideLayouts/slideLayout", "ppt/slideMasters/slideMaster")))
     major = re.search(r'<a:majorFont><a:latin typeface="([^"]*)"', theme)
@@ -195,6 +238,20 @@ def measure(path):
     x0 = title["x"] if title else 0.5
     x1 = round(title["x"] + title["w"], 2) if title else round(sw / EMU - 0.5, 2)
     median = lambda v: sorted(v)[len(v) // 2] if v else None  # noqa: E731
+    tc = theme_colors(theme, master)
+
+    def options(counter):
+        """役割ごとの候補（多い順に 3 つまで・テーマ色に読み替え・重複は 1 つに）"""
+        out = []
+        for spec in top(counter, skip=NEUTRAL, n=10):
+            spec = to_theme(spec, tc)
+            if spec not in out and spec.split("|")[0] not in NEUTRAL:
+                out.append(spec)
+        return out[:3]
+
+    opts = {"emphasis": options(run_colors), "panel": options(panel_fills), "accent": options(small_fills)}
+    rule_color = to_theme(top(rule_colors) or "7F7F7F", tc)
+    used = {to_theme(v, tc).split("|")[0] for v in palette} | set(palette)
 
     return {
         "source": Path(path).name,
@@ -212,12 +269,13 @@ def measure(path):
                   "explicit": top(fonts), "theme_major": major.group(1) if major else None,
                   "theme_minor": minor.group(1) if minor else None},
         "textbox": {"insets": [inch(v) for v in ins], "lst_style": lst, "bullet_level": bullet_lvl},
-        "rule": {"color": top(rule_colors) or "7F7F7F", "row": row_w or 0.5,
+        "rule": {"color": rule_color, "row": row_w or 0.5,
                  "head": heavier[0] if heavier else (row_w or 0.5) * 2},
         "tables": {"native": native_tables, "slides": len(slides)},
-        "colors": {"emphasis": top(run_colors, skip=NEUTRAL), "panel": top(panel_fills, skip=NEUTRAL),
-                   "accent": top(small_fills, skip=NEUTRAL)},
-        "palette": sorted(palette),
+        "colors": dict({k: (v[0] if v else None) for k, v in opts.items()}, ng=NG_RED),
+        "color_options": opts,
+        "theme_colors": tc,
+        "palette": sorted(used),
         "page_number": page_number,
     }
 
@@ -237,7 +295,8 @@ def summary(k):
         f"テキストボックス: 余白 {k['textbox']['insets']}・段組み {'あり（箇条書きは lvl=' + str(k['textbox']['bullet_level']) + '）' if k['textbox']['lst_style'] else 'なし'}",
         f"罫線: {k['rule']['color']}・行間 {k['rule']['row']}pt・見出し下 {k['rule']['head']}pt",
         f"表: 本文ページの表オブジェクト {k['tables']['native']} 個" + ("（テキストボックス＋罫線で組んでいる）" if not k['tables']['native'] else ""),
-        f"色: 強調 {k['colors']['emphasis']}・面 {k['colors']['panel']}・丸 {k['colors']['accent']}",
+        f"色: 強調 {k['colors']['emphasis']}・面 {k['colors']['panel']}・丸 {k['colors']['accent']}・✕ {k['colors']['ng']}",
+        f"色の候補（d.c(役割, 番号) で選ぶ）: " + "・".join(f"{r} {v}" for r, v in k["color_options"].items()),
         f"ページ番号: {dict(layout='レイアウトが出す（スライドに置かない）', slide='スライドごとに置いている', none='なし')[k['page_number']]}",
     ]
     return "\n".join(lines)
