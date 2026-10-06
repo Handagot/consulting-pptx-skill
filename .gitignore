@@ -8,4 +8,5 @@ package-lock.json
 # pages and skin.json (carries the source file name and theme colors) are customer material.
 *.pptx
 *.skin.json
-!assets/SuperTemplate_62type.pptx
+skin.json
+!assets/*.pptx
