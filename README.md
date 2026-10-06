@@ -93,7 +93,6 @@ SVG のチャートや画像は画像として貼られます（中の数値は�
 python3 scripts/measure_deck.py house.pptx                      # 資料の書式を測る → house.skin.json（目で見て直す）
 python3 examples/house_deck_example.py house.pptx pages.pptx    # 作例。資料のマスターの上に 2 ページ組む
 python3 scripts/check_deck.py pages.pptx --house house.skin.json
-scripts/render_pptx.sh pages.pptx pages.pdf                     # Mac。PowerPoint 本体で書き出して目視する
 ```
 
 タイトルは資料のプレースホルダーに入り、書体・地色・ページ番号は資料のマスターがそのまま決めます。表は資料と同じ「テキストボックス＋罫線」で組むので、貼り付けても書式が変わりません。詳しくは slide-rules.md §8.7。
@@ -115,7 +114,6 @@ scripts/render_pptx.sh pages.pptx pages.pdf                     # Mac。PowerPoi
 | `scripts/check_layout.mjs` | HTMLデッキの実レンダリング検査（フッターとの重なり・右端/下端のはみ出し・版面の40%超の空き） |
 | `scripts/measure_deck.py` | 既存の PowerPoint 資料の書式（レイアウト・タイトルの枠・文字の大きさ・書体の指定の有無・罫線・色）を測り、`skin.json` に書き出す |
 | `scripts/deck_pptx.py` | 測った書式で、その資料のマスターの上に編集可能なページを組む部品（タイトル・見出し・罫線の表・強調の面・矢羽・✓✕△）。作例は `examples/house_deck_example.py` |
-| `scripts/render_pptx.sh`・`scripts/pdf2png.swift` | PPTX を PowerPoint 本体で PDF に書き出し、ページごとの PNG にする（Mac）。開く前に `check_deck.py --xml-only` で、PowerPoint が開けなくなる不正を止める |
 | `tests/` | 機械チェックの自己テスト（`python3 -m unittest discover -s tests`）。指摘を機械チェックにしたら、直していない版で FAIL が出ることをここで確かめる |
 | `assets/SlideCatalog_16x9.pdf` | **62型のスライド型カタログ（両パーツ集を印刷した62ページ）。型を探すときの入口** |
 | `assets/SuperTemplate_62type.pptx` | 62型のPPTX見本帳（全スライド編集可能）。PowerPoint で手動コピーして使うときの見本。パーツ集の正本ではない |

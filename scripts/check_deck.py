@@ -38,7 +38,7 @@ def warn(msg):
 # 確認のために自動で開かせると、そのダイアログが残って以後の操作を止める。開く前にここで止める。
 SCHEME_COLORS = {"bg1", "tx1", "bg2", "tx2", "accent1", "accent2", "accent3", "accent4", "accent5", "accent6",
                  "hlink", "folHlink", "dk1", "lt1", "dk2", "lt2", "phClr"}
-XML_ONLY = False   # --xml-only: 上の不正だけを見て終える（render_pptx.sh が開く前に使う）
+XML_ONLY = False   # --xml-only: 上の不正だけを見て終える（PowerPoint に開かせる前に使う）
 HOUSE = None       # --house: measure_deck.py が書き出した、差し込む先の資料の書式
 
 

@@ -4,7 +4,7 @@
   python3 examples/house_deck_example.py house.pptx pages.pptx    # house.pptx を土台に。書式はその場で測る
   python3 examples/house_deck_example.py                         # 土台なし（python-pptx の白紙）で形だけ試す
 
-組んだあと: python3 scripts/check_deck.py pages.pptx --house house.skin.json → scripts/render_pptx.sh で目視。
+組んだあと: python3 scripts/check_deck.py pages.pptx --house house.skin.json → 目視（slide-rules §8）。
 位置はインチ。高さは「行数 ×（pt × 1.2 ÷ 72）」で見積もり、1〜2 行ぶんの余裕を残す。
 """
 import sys
