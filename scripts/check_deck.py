@@ -6,6 +6,8 @@
   python3 check_deck.py deck.html
   python3 check_deck.py assets/SuperTemplate_36type.pptx --template   # テンプレ集そのものを検査するとき
   python3 check_deck.py deck.html --forbid ~/.config/deck-forbidden-terms.txt   # 顧客名・社内語の残りを FAIL
+  python3 check_deck.py pages.pptx --house house.skin.json   # 既存の資料へ差し込むページ（slide-rules §8.7）
+  python3 check_deck.py out.pptx --xml-only                  # PowerPoint が開けなくなる不正だけを見る
 
 正典: references/slide-rules.md
 終了コード: FAIL があれば 1。
@@ -29,6 +31,45 @@ def fail(msg):
 
 def warn(msg):
     warns.append(msg)
+
+
+# --- PowerPoint が開けなくなる不正（slide-rules §8.7）-------------------------------
+# テーマ色の欄に HEX や存在しない名前を書いた PPTX は、python-pptx では読めても PowerPoint は「修復」を求める。
+# 確認のために自動で開かせると、そのダイアログが残って以後の操作を止める。開く前にここで止める。
+SCHEME_COLORS = {"bg1", "tx1", "bg2", "tx2", "accent1", "accent2", "accent3", "accent4", "accent5", "accent6",
+                 "hlink", "folHlink", "dk1", "lt1", "dk2", "lt2", "phClr"}
+XML_ONLY = False   # --xml-only: 上の不正だけを見て終える（render_pptx.sh が開く前に使う）
+HOUSE = None       # --house: measure_deck.py が書き出した、差し込む先の資料の書式
+
+
+def check_xml_validity(idx, xml):
+    bad = sorted(set(re.findall(r'<a:schemeClr val="([^"]*)"', xml)) - SCHEME_COLORS)
+    if bad:
+        fail(f"p{idx}: テーマ色の名前が不正 {bad}（HEX は srgbClr に書く。このままでは PowerPoint が開けない — §8.7）")
+    if re.search(r'<a:ext cx="-\d+"|<a:ext cx="\d+" cy="-\d+"', xml):
+        fail(f"p{idx}: 図形の大きさが負の値（PowerPoint が開けない — §8.7）")
+    szs = [int(v) for v in re.findall(r'<a:(?:rPr|endParaRPr|defRPr)[^>]*\bsz="(\d+)"', xml)]
+    if any(not 100 <= v <= 400000 for v in szs):
+        fail(f"p{idx}: 文字の大きさ sz が範囲外（100〜400000。PowerPoint が開けない — §8.7）")
+
+
+def check_house(idx, slide, xml):
+    """差し込む先の資料と作りが合っているか（slide-rules §8.7）。HOUSE は measure_deck.py の出力"""
+    if HOUSE.get("title") and slide.shapes.title is None:
+        fail(f"p{idx}: タイトルがプレースホルダーに入っていない（位置と書体は資料のレイアウトが決める — §8.7）")
+    faces = sorted(set(re.findall(r'<a:(?:latin|ea) typeface="((?!\+)[^"]*)"', xml)))
+    if faces and HOUSE["fonts"]["inherit"]:
+        fail(f"p{idx}: 書体を run に直指定 {faces[:4]}（資料はテーマ任せ。差し込むと書体がずれる — §8.7）")
+    elif faces and set(faces) - {HOUSE["fonts"].get("explicit")}:
+        warn(f"p{idx}: 資料と違う書体 {sorted(set(faces) - {HOUSE['fonts'].get('explicit')})[:4]}（資料は {HOUSE['fonts'].get('explicit')}）")
+    if "<a:tbl>" in xml and not HOUSE["tables"]["native"]:
+        warn(f"p{idx}: PowerPoint の表オブジェクト（資料の表はテキストボックス＋罫線。deck_pptx の table で組む — §8.7）")
+    if 'type="slidenum"' in xml and HOUSE.get("page_number") == "layout":
+        warn(f"p{idx}: ページ番号をスライドに置いている（資料はレイアウトが出すので二重になる — §8.7）")
+    used = set(v.upper() for v in re.findall(r'<a:srgbClr val="([0-9A-Fa-f]{6})"', xml)) | set(re.findall(r'<a:schemeClr val="([^"]+)"', xml))
+    extra = sorted(used - set(HOUSE.get("palette") or used) - {"FF0000", "FFFFFF", "000000", "bg1", "tx1"})
+    if extra:
+        warn(f"p{idx}: 資料に無い色 {extra[:6]}（資料のテーマ色から選ぶ — §8.7）")
 
 
 # テンプレ集そのものを検査するときだけ True（--template）。
@@ -268,7 +309,7 @@ def check_orphan(idx, shape, label="タイトル"):
         pt = max(szs)
         w_in = shape.width / 914400.0
         cap = max(4, int(w_in / (pt / 72.0)))
-        for line in raw.split("\n"):
+        for line in raw.replace("\v", "\n").split("\n"):
             L = _fwlen(line.strip())
             if L <= cap:
                 continue
@@ -310,8 +351,9 @@ def check_pptx(path):
     except ImportError:
         sys.exit("python-pptx が必要: pip3 install python-pptx")
     prs = Presentation(path)
-    if abs(prs.slide_width - EMU_W) > 2000 or abs(prs.slide_height - EMU_H) > 2000:
-        fail(f"スライドサイズ {prs.slide_width}x{prs.slide_height} ≠ 16:9 {EMU_W}x{EMU_H}")
+    want_w, want_h = (HOUSE["slide"]["emu"] if HOUSE else (EMU_W, EMU_H))   # 差し込むページは資料の大きさに合わせる（§1）
+    if not XML_ONLY and (abs(prs.slide_width - want_w) > 2000 or abs(prs.slide_height - want_h) > 2000):
+        fail(f"スライドサイズ {prs.slide_width}x{prs.slide_height} ≠ {'資料' if HOUSE else '16:9'} {want_w}x{want_h}")
 
     titles = []
     term_pages = []
@@ -321,6 +363,9 @@ def check_pptx(path):
             xml = z.read(n).decode("utf8", "ignore")
             idx = int(re.search(r"slide(\d+)", n).group(1))
             term_pages.append((idx, " ".join(re.findall(r"<a:t>(.*?)</a:t>", xml, re.S))))
+            check_xml_validity(idx, xml)
+            if XML_ONLY:
+                continue
             # 角丸（高さ 0.4in=365760 EMU 以上の図形のみ）
             rr = 0
             for m in re.finditer(r"<p:sp>.*?</p:sp>", xml, re.S):
@@ -366,6 +411,12 @@ def check_pptx(path):
                     if f'val="{c}"' in xml:
                         warn(f"{n}: 禁止色 {c}")
 
+    if XML_ONLY:
+        return titles
+    if HOUSE:
+        with zipfile.ZipFile(path) as z:
+            for i, s in enumerate(prs.slides, 1):
+                check_house(i, s, z.read(s.part.partname.lstrip("/")).decode("utf8", "ignore"))
     for i, s in enumerate(prs.slides, 1):
         title = ""
         named = next((sh for sh in s.shapes if sh.has_text_frame and sh.name.startswith("Title")), None)
@@ -543,7 +594,15 @@ def check_html(path):
 def main():
     global TEMPLATE_MODE
     args = sys.argv[1:]
-    global FORBIDDEN_TERMS, PART_TYPE_NAMES
+    global FORBIDDEN_TERMS, PART_TYPE_NAMES, XML_ONLY, HOUSE
+    if "--xml-only" in args:
+        XML_ONLY = True
+        args.remove("--xml-only")
+    if "--house" in args:
+        k = args.index("--house")
+        import json
+        HOUSE = json.loads(Path(args[k + 1]).read_text(encoding="utf8"))
+        del args[k:k + 2]
     if "--template" in args:
         TEMPLATE_MODE = True
         args.remove("--template")
