@@ -104,7 +104,42 @@ AI_SMELL_WORDS = [
     "昨今", "変化の激しい", "という点において", "の観点から",
     "させていただきます", "いただけますと幸いです",
     "と言えるでしょう", "と考えられます", "することが可能です",
+    # 先送りの決まり文句（中身を書かずに後へ回す）
+    "詳細は別途", "別途ご説明", "追ってご連絡", "今後検討してまいります", "詳細は後日",
 ]
+
+
+def check_production_meta(slides):
+    """制作メタ（本スキル名・リポジトリ）がスライドに見えていないか（SKILL.md「本スキル使用の注釈」）。
+    ツール名を置けるのは最終ページ（裏表紙）の出典行だけ。それ以外のページに出ていたら FAIL。
+    「本資料は…で作成」の文は免責文のこともあるので、最終ページ以外にあれば WARN で目視に回す。"""
+    def visible(s):
+        s = re.sub(r"<(script|style)[^>]*>.*?</\1>|<!--.*?-->", " ", s, flags=re.S)
+        return re.sub(r"<[^>]+>", " ", s)
+    if TEMPLATE_MODE:   # パーツ集は見本の並びなので裏表紙が最終ページにない
+        return
+    for i, s in enumerate(slides, 1):
+        if i == len(slides):
+            continue
+        v = visible(s)
+        m = re.search(r"consulting-pptx-skill", v)
+        if m:
+            fail(f"p{i}: 制作メタ情報がスライドに表示されている: 「{m.group(0)}」（ツール名を置けるのは最終ページの出典行だけ）")
+            continue
+        m = re.search(r"本資料は[^。<]{0,40}で作成", v)
+        if m:
+            warn(f"p{i}: 「{m.group(0)}」（制作クレジットなら最終ページの出典行へ。免責文なら可）")
+        elif re.search(r"github\.com", v):
+            warn(f"p{i}: スライドに github.com が表示されている（制作メタなら消す。出典として公開リポジトリを示すなら可）")
+
+
+def pptx_text(xml):
+    """スライド XML の表示テキストを段落（<a:p>）ごとに 1 行にして返す。
+    run（<a:t>）ごとに改行すると「ラベル」「 — 」「説明」のように run が分かれたダッシュ連結を見落とす。"""
+    paras = re.findall(r"<a:p\b.*?</a:p>", xml, re.S)
+    if not paras:
+        return "\n".join(re.findall(r"<a:t>(.*?)</a:t>", xml, re.S))
+    return "\n".join("".join(re.findall(r"<a:t>(.*?)</a:t>", p, re.S)) for p in paras)
 
 
 def check_ai_smell(pages):
@@ -117,7 +152,16 @@ def check_ai_smell(pages):
     if hits:
         detail = "、".join(f"p{i}:「{'/'.join(ws[:3])}」" for i, ws in sorted(hits.items())[:6])
         warn(f"AI臭ワード検出: {detail}（§7.9 / ai-smell-lexicon.md。素の動詞・直球の言い方に置き換え）")
-    dash_pages = sorted({i for i, txt in pages if " — " in txt or "—" in txt})
+    # 非該当セルの「—」単独（§6）は連結ではないので除外する。行（文章塊）単位で、
+    # 「—」が他の文字と同じ塊に入っているものだけを数える（「ラベル — 説明」「A—B」）。
+    def _dash_joined(txt):
+        for line in txt.split("\n"):
+            t = line.strip()
+            if "—" not in t or re.fullmatch(r"—+(?:\s*[（(][^）)]*[）)])?", t):
+                continue
+            return True
+        return False
+    dash_pages = sorted({i for i, txt in pages if _dash_joined(txt)})
     if dash_pages:
         warn(f"ダッシュ「 — 」連結 p{dash_pages}（AI文体の典型。句点・「：」・括弧に置き換え。§7.9）")
 
@@ -129,6 +173,55 @@ def check_terms(pages):
         hits_b = sorted({i for i, t in pages if re.search(pb, t)})
         if hits_a and hits_b:
             warn(f"表記ゆれ疑い: 「{la}」p{hits_a} と「{lb}」p{hits_b} が混在（§7.6 1資料1用語。別概念なら可・目視確認）")
+
+# --- 数値の平仄（slide-rules §7.6）--------------------------------------------------
+# 同じ指標（数の直前の語）が、別のページで違う値で書かれていたら WARN。
+# 例:「売上高 120億円」(p3) と「売上高は約118億円」(p7)、「利用者数 4.2万人」と「利用者数 42,500人」。
+# 単位の桁（千・万・億・兆）は掛けて比べるので、書き方が違うだけで値が同じなら出さない。
+# 時点（2024年／2024年度）が直前にあれば指標名に含めて比べるので、年の違う同じ指標は食い違いにしない。
+NUM_UNITS = (r"円|ドル|ユーロ|人|名|件|社|団体|店舗|拠点|校|戸|世帯|台|個|本|枚|冊|回|倍|%|％|pt|ポイント|"
+             r"時間|日|か月|ヶ月|週|kWh|MWh|GWh|kW|MW|GW|kg|km|m3|㎥|m2|㎡|ha|ヘクタール|g|t|トン|m|L")
+NUM_LABEL = re.compile(
+    r"(?:(?P<year>(?:19|20)\d{2})年度?(?:の|時点の|末の|末時点の)?)?"
+    r"(?P<label>[一-龥々ァ-ヶー]{2,12})(?:は|が|の|：|:|＝|=)?\s*(?:約|およそ|計|合計)?\s*"
+    r"(?P<num>\d[\d,]*(?:\.\d+)?)\s*(?P<unit>万|億|兆|千)?(?P<base>" + NUM_UNITS + r")(?![A-Za-z])")
+_ZEN = str.maketrans("０１２３４５６７８９，．％：＝", "0123456789,.%:=")
+_MULT = {"千": 1e3, "万": 1e4, "億": 1e8, "兆": 1e12}
+_UNIT_ALIAS = {"名": "人", "％": "%", "ポイント": "pt", "ヶ月": "か月", "㎥": "m3", "㎡": "m2",
+               "ヘクタール": "ha", "トン": "t"}
+# 指標名にならない一般語（「以上 80%」「平均2.1%」など）は比べない
+_GENERIC_LABELS = {"以上", "以下", "未満", "超", "平均", "合計", "全体", "最大", "最小", "最高", "最低",
+                   "前年", "前年比", "同期", "うち", "残り", "目標", "実績", "約", "計"}
+
+
+def _num_facts(text):
+    """(指標名, 単位) -> 値 の組を拾う。値は単位の桁（万・億）を掛けた数で比べる。"""
+    out = []
+    for m in NUM_LABEL.finditer(text.translate(_ZEN)):
+        if m["label"] in _GENERIC_LABELS:
+            continue
+        label = (m["year"] + "年:" if m["year"] else "") + m["label"]
+        base = _UNIT_ALIAS.get(m["base"], m["base"])
+        try:
+            val = round(float(m["num"].replace(",", "")) * _MULT.get(m["unit"] or "", 1), 6)   # 1.1億 = 110,000,000 を float 誤差で食い違いにしない
+        except ValueError:
+            continue
+        out.append(((label, base), val, m.group(0).strip()))
+    return out
+
+
+def check_number_consistency(pages):
+    """pages: [(idx, text), ...] 同じ指標がページ間で違う値なら WARN（別概念・別時点なら目視で無視してよい）"""
+    seen = {}
+    for i, t in pages:
+        for key, val, raw in _num_facts(t):
+            seen.setdefault(key, []).append((i, val, raw))
+    for (label, base), hits in seen.items():
+        vals = {v for _, v, _ in hits}
+        pages_hit = {i for i, _, _ in hits}
+        if len(vals) > 1 and len(pages_hit) > 1:
+            detail = " / ".join(f"p{i}「{raw}」" for i, _, raw in hits[:4])
+            warn(f"数値の平仄疑い: 「{label.replace(':', '')}」が {detail} で食い違う（§7.6 数値の平仄。別時点・別範囲なら注記して可）")
 
 # --- 本文のプレースホルダー残り（slide-rules §2.8 / README）-------------------------
 # タイトルだけでなく本文・表・カードに「Text N」「ラベル N」「YYYY」「パーツNN｜」が残っていたら FAIL。
@@ -227,6 +320,8 @@ def check_title(idx, title, explicit_break=False):
         fail(f"p{idx}: タイトルに Step 連結（タグチップで表現）: 「{t}」")
     if re.search(r"^(この|その|ここまで)", t):
         fail(f"p{idx}: 他スライド参照語で始まるタイトル: 「{t}」")
+    if re.match(r"^(まずは|では|そして|さらに|ちなみに)|^(まず|また|次に)[、,]", t):
+        warn(f"p{idx}: タイトルが話し言葉の接続詞で始まる（主語から書く — slide-rules §2.18）: 「{t}」")
     if t.count("（") + t.count("(") >= 2:
         warn(f"p{idx}: タイトルに丸括弧が多い: 「{t}」")
     if not TEMPLATE_MODE and re.search(r"[◯○]{2,}|Text\s*\d|ラベル\s*\d|タイトル\s*\d|Source\s*\d|YYYY|ダミー|^資料名$|^会社名$", t):
@@ -351,7 +446,8 @@ def check_pptx(path):
         from pptx.util import Emu
     except ImportError:
         sys.exit("python-pptx が必要: pip3 install python-pptx")
-    prs = Presentation(path)
+    from pptx_open import open_presentation
+    prs = open_presentation(path)
     want_w, want_h = (HOUSE["slide"]["emu"] if HOUSE else (EMU_W, EMU_H))   # 差し込むページは資料の大きさに合わせる（§1）
     if not XML_ONLY and (abs(prs.slide_width - want_w) > 2000 or abs(prs.slide_height - want_h) > 2000):
         fail(f"スライドサイズ {prs.slide_width}x{prs.slide_height} ≠ {'資料' if HOUSE else '16:9'} {want_w}x{want_h}")
@@ -363,8 +459,10 @@ def check_pptx(path):
         for n in sorted(names, key=lambda s: int(re.search(r"slide(\d+)", s).group(1))):
             xml = z.read(n).decode("utf8", "ignore")
             idx = int(re.search(r"slide(\d+)", n).group(1))
-            term_pages.append((idx, " ".join(re.findall(r"<a:t>(.*?)</a:t>", xml, re.S))))
+            term_pages.append((idx, pptx_text(xml)))
             check_xml_validity(idx, xml)
+            if re.search(r'<p:sld\b[^>]*\bshow="0"', xml):
+                warn(f"p{idx}: 非表示のスライド（使わないならファイルから消す。付録の控えとして意図して残すなら無視してよい — slide-rules §8）")
             if XML_ONLY:
                 continue
             # 角丸（高さ 0.4in=365760 EMU 以上の図形のみ）
@@ -464,6 +562,7 @@ def check_pptx(path):
                     if szs and max(szs) <= 12 and not any(r.font.bold for p in sh.text_frame.paragraphs for r in p.runs):
                         warn(f"p{i}: タイトル直下にサブタイトルらしき行: 「{txt}」")
     check_terms(term_pages)
+    check_number_consistency(term_pages)
     check_ai_smell(term_pages)
     return titles
 
@@ -479,7 +578,7 @@ def check_kicker_and_conclusion(html):
     if kick:
         warn(f"英字大文字の装飾キッカー ×{len(kick)}: {' / '.join(sorted(set(kick))[:4])}（§7.22: 日本語デッキでは右上タグチップで話題を示す）")
     # 左右2カラムの見出し（h3/h4/.hd）だけを見る。th・行見出し（.rh）は行軸で通して読めるので対象外（§4.49）
-    heads = [re.sub(r"<[^>]+>", "", t).strip() for t in re.findall(r"<(?:h3|h4|div class=\"(?:hd|colhd|col-h)[^\"]*\")[^>]*>(.*?)</", body, re.S)]
+    heads = [re.sub(r"<[^>]+>", "", t).strip() for t in re.findall(r"<(?:h3|h4|div class=\"(?:hd|colhd|colh|col-h)[^\"]*\")[^>]*>(.*?)</", body, re.S)]
     dakara = [t for t in heads if re.match(r"^(だから|なので|つまり)[、:：]?", t)]
     if dakara:
         warn(f"左右カラムの見出しが接続詞で始まる ×{len(dakara)}（§4.49: 2コンテンツの見出しは単独で読める名詞句に）")
@@ -498,6 +597,14 @@ def _leaf_texts(fragment):
             if piece:
                 out.append(piece)
     return out
+
+
+def check_exec_summary(idx, title, fragment):
+    """§7.16 エグゼクティブサマリーはページタイトルの羅列にせず、主文＋インデントした詳細の階層ブレットで書く"""
+    if not re.search(r"エグゼクティブサマリー|エグゼクティブ・サマリー|Executive Summary", title, re.I):
+        return
+    if not re.search(r"<li\b(?:(?!</li>).)*?<(?:ul|ol)\b", fragment, re.S):
+        warn(f"p{idx}: エグゼクティブサマリーに入れ子のブレットが無い（§7.16: 各行を主文＋インデントした詳細2〜3本で書く。ページタイトルの羅列にしない）")
 
 
 def check_html(path):
@@ -540,6 +647,11 @@ def check_html(path):
     if re.search(r"\bth\s*{[^}]*color\s*:\s*#?(9[0-9a-f]{5}|a[0-9a-f]{5}|b[0-9a-f]{5}|c[0-9a-f]{5}|888|999|aaa|bbb|ccc|gr[ae]y)\b", html, re.I):
         warn("表ヘッダーが薄グレー（§6: 見出しは本文と同じ濃色）")
     check_kicker_and_conclusion(html)
+    # ハーベイボール ¾ の描画（中心点の無い多角形は斜めに欠けた形になる）
+    if re.search(r"\.q3\s+i\s*{[^}]*clip-path\s*:\s*polygon\(\s*50%\s+0\s*,", html):
+        fail("ハーベイボール ¾ の clip-path に中心点（50% 50%）が無い。左上が斜めに欠けた形になる（polygon(50% 50%,50% 0,100% 0,100% 100%,0 100%,0 50%) に直す）")
+    if not re.search(r"<meta[^>]+charset\s*=\s*[\"']?utf-?8", html, re.I):
+        fail('<meta charset="utf-8"> が無い（Windows のブラウザで文字化けする — slide-rules §8）')
     if re.search(r"\bth\s*{[^}]*font-weight\s*:\s*(400|normal|300)", html):
         fail("表ヘッダーが細字")
     if re.search(r"tr:nth-child\((even|odd)\)", html):
@@ -578,17 +690,20 @@ def check_html(path):
         check_count_match(i, t, re.sub(r"<[^>]+>", " ", s))
         leaves = _leaf_texts(s)
         check_body_placeholders(i, leaves, t)
+        check_exec_summary(i, t, s)
         if "cover" not in (slide_classes[i - 1] if i - 1 < len(slide_classes) else ""):
             check_multi_sentence(i, leaves)
     if not slides:
         warn("`.slide` 要素が見つからない（タイトル検査スキップ）")
+    check_production_meta(slides if slides else [html])
     if slides:
         check_terms([(i, re.sub(r"<[^>]+>", " ", s)) for i, s in enumerate(slides, 1)])
-        check_ai_smell([(i, re.sub(r"<[^>]+>", " ", s)) for i, s in enumerate(slides, 1)])
+        check_number_consistency([(i, re.sub(r"<[^>]+>", " ", s)) for i, s in enumerate(slides, 1)])
+        check_ai_smell([(i, re.sub(r"<[^>]+>", "\n", s)) for i, s in enumerate(slides, 1)])
         check_forbidden([(i, re.sub(r"<[^>]+>", " ", s)) for i, s in enumerate(slides, 1)], html)
     else:
         check_terms([(1, re.sub(r"<[^>]+>", " ", html))])
-        check_ai_smell([(1, re.sub(r"<[^>]+>", " ", html))])
+        check_ai_smell([(1, re.sub(r"<[^>]+>", "\n", html))])
     return titles
 
 
@@ -615,7 +730,7 @@ def main():
     if not args:
         sys.exit(__doc__)
     p = args[0]
-    titles = check_pptx(p) if p.lower().endswith(".pptx") else check_html(p)
+    titles = check_pptx(p) if p.lower().endswith((".pptx", ".potx")) else check_html(p)
     if not TEMPLATE_MODE:
         check_title_variety(titles)
     print("=== タイトル一覧（上から通し読みしてストーリーが繋がるか確認） ===")

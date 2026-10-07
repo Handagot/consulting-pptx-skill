@@ -175,6 +175,55 @@ class HouseDeck(unittest.TestCase):
         code, fails = check(bad, "--house", str(self.skin_path))
         self.assertTrue(any("タイトルがプレースホルダーに入っていない" in f for f in fails), fails)
 
+    def test_dash_join_split_across_runs_is_detected(self):
+        """「ラベル」「 — 」「説明」と run が分かれていても、段落単位で見てダッシュ連結を WARN する。"""
+        from pptx import Presentation
+        from pptx.util import Inches, Pt
+        prs = Presentation(str(self.house))
+        s = prs.slides[0]
+        tb = s.shapes.add_textbox(Inches(0.5), Inches(5), Inches(8), Inches(0.4))
+        for piece in ("承認待ち", " — ", "平均3日"):
+            r = tb.text_frame.paragraphs[0].add_run()
+            r.text, r.font.size = piece, Pt(14)
+        out = self.d / "dash_runs.pptx"
+        prs.save(str(out))
+        r = subprocess.run([sys.executable, str(CHECK), str(out)], capture_output=True, text=True)
+        self.assertIn("ダッシュ", r.stdout)
+
+    def test_potx_template_is_measured_and_built_on(self):
+        """社内書式が .potx（PowerPoint テンプレート）で配られても、測る・組む・検査するが通る。"""
+        from deck_pptx import Deck
+        from measure_deck import measure
+        potx = patched(self.house, self.d / "house.potx",
+                       "presentationml.presentation.main+xml", "presentationml.template.main+xml",
+                       part="[Content_Types].xml")
+        skin = measure(potx)
+        self.assertEqual((skin["layout"], skin["sizes"]["body"]), (self.skin["layout"], self.skin["sizes"]["body"]))
+        d = Deck(potx, skin)
+        d.slide("テンプレートの上に組んだページは、通常の pptx として保存される")
+        out = self.d / "from_potx.pptx"
+        d.save(out)
+        with zipfile.ZipFile(out) as z:
+            self.assertIn(b"presentationml.presentation.main+xml", z.read("[Content_Types].xml"))
+        self.assertEqual(check(out, "--xml-only"), (0, []))
+        self.assertEqual(check(potx, "--xml-only"), (0, []))
+
+    def test_body_layout_is_found_in_a_one_of_each_sample(self):
+        """表紙・章扉・本文を 1 枚ずつ並べた見本でも、本文のレイアウトを選ぶ（同点で表紙を選ばない）。"""
+        from pptx import Presentation
+        from measure_deck import measure
+        prs = Presentation()
+        prs.slide_width, prs.slide_height = 12192000, 6858000
+        for name in ("Title Slide", "Section Header", "Title and Content"):
+            s = prs.slides.add_slide(next(l for l in prs.slide_layouts if l.name == name))
+            s.shapes.title.text = f"{name} の見本"
+        sample = self.d / "one_of_each.pptx"
+        prs.save(str(sample))
+        self.assertEqual(measure(sample)["layout"], "Title and Content")
+        self.assertEqual(measure(sample, layout="Section Header")["layout"], "Section Header")   # 名前で指定もできる
+        with self.assertRaises(SystemExit):
+            measure(sample, layout="無いレイアウト")
+
     def test_line_break_in_shape_is_not_an_orphan(self):
         r = subprocess.run([sys.executable, str(CHECK), str(self.pages)], capture_output=True, text=True)
         self.assertNotIn("泣き別れ", r.stdout)   # 矢羽の中の段落内改行を 1 行と数えない

@@ -62,6 +62,16 @@ pip3 install python-pptx
 - PDF 化は Chrome のヘッドレス印刷を使います（コマンドは次節）。
 - `package.json` は手順2の playwright を入れるためだけのものです。`node_modules/` は .gitignore 済みです。
 
+## 更新と自分用のカスタマイズ
+
+規約と機械チェックは使った人の指摘で頻繁に直ります。**週に 1 回を目安に最新を取り込んでください**。
+
+```bash
+cd ~/.claude/skills/consulting-pptx-skill && git pull
+```
+
+自分の組織の規約・禁止語・テンプレは `local/` に置きます（`local/README.md` 参照。git 管理外なので `git pull` で消えません）。スキルは本体の規約を読んだ後に `local/slide-rules.local.md` を読み、重なる規則はそちらを優先します。本体のファイルを直接書き換えると更新のたびに衝突するので、組織固有の規則は `local/` に、どの組織でも効く規則は PR にしてください。
+
 ## 手動で使う場合
 
 ```bash
@@ -90,7 +100,7 @@ SVG のチャートや画像は画像として貼られます（中の数値は�
 社内の標準デッキや作りかけの提案書に数ページ足す場合、変換した PPTX は書体・文字の大きさ・表の作りが元の資料と揃いません。このときは変換せず、**その資料のマスターの上に直接組みます**。
 
 ```bash
-python3 scripts/measure_deck.py house.pptx                      # 資料の書式を測る → house.skin.json（目で見て直す）
+python3 scripts/measure_deck.py house.pptx                      # 資料の書式を測る → house.skin.json（目で見て直す）。.potx も可
 python3 examples/house_deck_example.py house.pptx pages.pptx    # 作例。資料のマスターの上に 2 ページ組む
 python3 scripts/check_deck.py pages.pptx --house house.skin.json
 ```
@@ -121,8 +131,14 @@ python3 scripts/check_deck.py pages.pptx --house house.skin.json
 ## カスタマイズ
 
 - 色・書体は両パーツ集の `<style>` 冒頭 `:root` トークンで差し替えます。ブランドに合わせるときは両ファイルを同じ値にします
-- 生成した資料の**最終ページの出典行だけ**に「consulting-pptx-skill で作成」の注釈を入れます
+- 生成した資料の**最終ページの出典行だけ**に「consulting-pptx-skill で作成」の注釈を入れます。他のページにツール名が出ていると `check_deck.py` が FAIL にします
 - PowerPoint（.pptx）が要るときは、HTML で仕上げてから `scripts/html_to_pptx.py` で変換します（上の「PowerPoint（.pptx）にする流れ」）。以前あった JSON から編集可能PPTXを書き出す仕組みは外しました（git タグ `pipeline-archived` の時点のリポジトリに残っています）
+
+## コントリビューション
+
+Issue・Pull Request を歓迎します。出し方（規約と機械チェックをセットで足す、機密を入れない、テストの書き方など）は [CONTRIBUTING.md](CONTRIBUTING.md) にまとめています。
+
+使っていて「この指摘は当社だけでなく誰にでも効く」と思ったら、それが一番よい PR の種です。スキル自身も、本体の規約の誤検知や新しい指摘に当たったとき「PR で出しませんか」と一度だけ聞くようになっています。`local/` に溜まった規則のうち顧客名の入っていないものを、月に 1 回見直して PR にするのがおすすめです。
 
 ## About
 
@@ -133,4 +149,4 @@ Made by [Carnot AI](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_
 
 ## License
 
-MIT
+コード・文書は [MIT License](LICENSE) です。MIT License には商標を使う権利は含まれません。「Carnot」「Carnot AI」「Jinba」とロゴの扱いは [TRADEMARK.md](TRADEMARK.md)（事実としての言及・クレジット行・リンクは自由、製品名・ロゴ・公式を装う表現・改変版への商標使用は要許可）に従ってください。
