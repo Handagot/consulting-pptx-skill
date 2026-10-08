@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="ja"><head><meta charset="utf-8">
-<title>自由記述デッキ 追加パーツ集 16:9（チャート・表・構造・計画の35型）</title>
+<html lang="en"><head><meta charset="utf-8">
+<title>Freeform Deck Additional Parts Library 16:9 (35 Chart, Table, Structure, and Planning Archetypes)</title>
 <!--
   ============================================================
-  自由記述（freeform）デッキの追加パーツ集（16:9・1パーツ=1スライド）
-  旧 SlideSpec パイプラインの 36型（表紙を除く35型）を、そのまま HTML パーツとして移植したもの。
-  基本パーツ集 freeform_parts_16x9.html（表紙・全体マップ・矢羽・2カラム・軸のある表など）で足りないとき、
-  ここから該当 section をコピーして使う。使用頻度は基本パーツ集より低い。
-  規約の正典: references/slide-rules.md（作成前に必読）／型の一覧と使いどころ: references/archetype-catalog.md
-  ★ 各スライドの h1 は「そのパーツが何の型か」を表示しているだけ。実デッキでは主張文に差し替える（slide-rules §2.8）。
-  配色・書体は <style> 冒頭の :root トークン（基本パーツ集と同じ warm 既定）。ネイビー系は .deck に skin-cool を付ける。
-  納品前: check_deck.py で FAIL 0 → PDF化して全ページ目視。
+  Freeform Deck Additional Parts Library (16:9 - 1 part = 1 slide)
+  Port of the 35 archetypes (excluding cover) from the legacy SlideSpec pipeline into native HTML parts.
+  When the base parts library freeform_parts_16x9.html (title, overview map, chevrons, 2-column, structured table, etc.)
+  is insufficient, copy the relevant section from here. Used less frequently than the base library.
+  Canonical Rulebook: references/slide-rules.md (Required reading before authoring) / Archetype Index: references/archetype-catalog.md
+  * Each slide's h1 displays only the archetype name. In production decks, overwrite with an assertive takeaway statement (slide-rules §2.8).
+  Color palette and typography use the :root tokens at the top of <style> (warm default, matching base parts). For navy themes, add skin-cool to .deck.
+  Pre-flight: check_deck.py FAIL 0 -> Export to PDF and visually inspect all pages.
   ============================================================
 -->
 <style>
@@ -60,7 +60,7 @@ body {
 .slide {
   position: relative;
   width: var(--slide-w);
-  zoom: 0.8; /* 1600px × 0.8 = 1280px = 338.67mm（16:9・A のパーツ集と同じ物理サイズ） */
+  zoom: 0.8; /* 1600px x 0.8 = 1280px = 338.67mm (same physical dimensions as 16:9 base parts) */
   page-break-after: always;
   aspect-ratio: 16 / 9;
   background: var(--slide-bg);
@@ -400,7 +400,7 @@ body {
 }
 
 .comparison > div:nth-last-child(-n+4) {
-  border-bottom: 0; /* 最終行（4列）の下に罫線を置かない（§5.4） */
+  border-bottom: 0; /* Eliminate bottom border on final row (4 columns) (slide-rules §5.4) */
 }
 
 .comparison > div {
@@ -692,7 +692,7 @@ body {
 }
 
 .risk-table tbody tr:last-child td {
-  border-bottom: 0; /* 行き先のない罫線を置かない（§5.4） */
+  border-bottom: 0; /* Eliminate orphaned bottom borders (slide-rules §5.4) */
 }
 
 .scenario-table .num {
@@ -701,7 +701,7 @@ body {
   font-weight: 700;
 }
 
-/* risk-high / risk-med の左端の赤・黄の帯は信号機3色（ai-smell-lexicon §3）なので廃止。重要セルは太字で立てる */
+/* Left edge red/amber bands on risk-high / risk-med deprecated due to traffic-light 3-color rule (ai-smell-lexicon §3). Emphasize key cells via bold text instead */
 .risk-high,
 .risk-med {
   border-left: 0;
@@ -1774,12 +1774,12 @@ body {
 
 .twf-bar {
   width: 100%;
-  flex: 0 0 auto; /* ラベルが2行になっても棒が潰れない */
+  flex: 0 0 auto; /* Prevent bar collapse even when labels wrap to 2 lines */
 }
 
 .twf-bar.base { background: var(--navy); }
 .twf-bar.up { background: var(--blue); }
-.twf-bar.down { background: var(--cyan); } /* 減る分は中立色。赤は「悪化」の意味にだけ使う（§5.8） */
+.twf-bar.down { background: var(--cyan); } /* Reductions use neutral accent color. Red reserved exclusively for deterioration (slide-rules §5.8) */
 .twf-bar.total { background: var(--ink); }
 
 .twf-label {
@@ -2338,7 +2338,7 @@ body {
   align-items: flex-end;
   gap: 18px;
   height: 320px;
-  width: 100%; /* 版面いっぱいに使う。固定幅で左に寄せない */
+  width: 100%; /* Fill entire canvas width. Do not clamp to left with fixed width */
 }
 
 .cf-op {
@@ -2481,7 +2481,7 @@ body {
    its own quiet line; the number is the only coloured object.
    ===================================================================== */
 
-/* metric subtitle — "指標名, 単位, 期間", never merged into the claim */
+/* metric subtitle -- "Metric Name, Units, Period", never merged into the claim */
 .metric-sub {
   font-size: 17px;
   font-weight: 600;
@@ -2805,7 +2805,7 @@ body {
   --soft-yellow: #fff3bd;
 }
 
-/* 見出しは cool/warm とも明朝（PPTX エクスポーターの Yu Mincho と一致。A レーンの自由記述テンプレとも同じ） */
+/* Headings use serif in both cool and warm (aligns with Yu Mincho in PPTX exporter and Lane A freeform template) */
 .title,
 .cover-title,
 .skin-cool .title,
@@ -2819,11 +2819,11 @@ body {
 }
 
 /* =====================================================================
-   Parts-derived archetypes（パーツ由来27型の HTML プレビュー）
-   templates/freeform_parts_16x9.html の CSS を .slide（1600×900px）の px 系に移植したもの。
-   換算: 1mm ≈ 4.724px（338.67mm → 1600px）、1pt ≈ 1.667px。
-   色はスキンのトークンに写像（#241a10→--ink/--navy、#6b4a2b→--blue、#c9a97e→--cyan、
-   #8a7c6c→--muted、#c7b69e→--rule、#e3dccf→--hairline、#f1ebe0/#efe8da→--soft-blue、#b9b3a9→--rule）。
+   Parts-derived archetypes (HTML preview of 27 archetypes derived from base parts)
+   Port of templates/freeform_parts_16x9.html CSS into .slide (1600x900px) px units.
+   Conversion: 1mm approx 4.724px (338.67mm -> 1600px), 1pt approx 1.667px.
+   Colors mapped to skin tokens (#241a10 -> --ink/--navy, #6b4a2b -> --blue, #c9a97e -> --cyan,
+   #8a7c6c -> --muted, #c7b69e -> --rule, #e3dccf -> --hairline, #f1ebe0/#efe8da -> --soft-blue, #b9b3a9 -> --rule).
    ===================================================================== */
 .slide--parts .sinner > .content {
   align-self: stretch;
@@ -2857,7 +2857,7 @@ body {
 .parts .grid > div > .rows { flex: 1; display: flex; flex-direction: column; }
 .parts .grid > div > .rows .r { flex: 1; align-items: center; }
 
-/* card（パーツ08） */
+/* card (Part 08) */
 .parts .card { background: var(--soft-blue); border: 0; display: flex; flex-direction: column; }
 .parts .hd { display: flex; align-items: baseline; gap: 12px; padding: 17px 19px 12px 19px; border-bottom: 1px solid var(--hairline); }
 .parts .no { font-size: 23px; font-weight: 700; color: var(--blue); line-height: 1; }
@@ -2865,7 +2865,7 @@ body {
 .parts .bd { padding: 17px 21px; font-size: 17px; line-height: 1.7; color: var(--ink); flex: 1; }
 .parts .bd ul { margin: 0; padding-left: 19px; }
 
-/* rows（パーツ02・26） */
+/* rows (Parts 02, 26) */
 .parts .rows .r { display: grid; grid-template-columns: 208px 1fr; gap: 28px; padding: 19px 0; border-top: 1px solid var(--rule); font-size: 18px; line-height: 1.6; }
 .parts .rows .r:first-child { border-top: 0; }
 .parts .rows .r > div:last-child { display: flex; align-items: center; gap: 12px; }
@@ -2874,7 +2874,7 @@ body {
 .parts > .rows .r { flex: 1; align-items: center; }
 .parts .ref { font-size: 13px; color: var(--blue); font-weight: 700; margin-left: auto; white-space: nowrap; }
 
-/* table（パーツ06・07・09・11・12・13・14・25） */
+/* table (Parts 06, 07, 09, 11, 12, 13, 14, 25) */
 .parts table { border-collapse: collapse; width: 100%; font-size: 17px; flex: 0 0 auto; }
 .parts th { background: none; text-align: left; padding: 12px; font-size: 19px; font-weight: 700; color: var(--ink); border-bottom: 2px solid var(--ink); }
 .parts td { padding: 19px 12px; border-bottom: 1px solid var(--rule); vertical-align: middle; line-height: 1.65; color: var(--ink); }
@@ -2883,13 +2883,13 @@ body {
 .parts td.ax { font-size: 18px; font-weight: 700; color: var(--blue); font-family: var(--pserif); border-right: 2px solid var(--ink); }
 .parts th.ax { border-right: 2px solid var(--ink); }
 .parts > table, .parts .side .sb table, .parts .two > div > table { flex: 1 1 0; height: 0; }
-/* 表を縦に伸ばすと余剰高さが見出し行にも配分され見出しが沈む（slide-rules §4.21） */
+/* Vertically expanding tables distributes excess height to header row, drowning the header (slide-rules §4.21) */
 .parts table tr:first-child:has(th) { height: 1px; }
 .parts td ul.cb { margin: 0; padding-left: 19px; line-height: 1.6; }
 .parts td ul.cb li { margin: 0 0 5px 0; }
 .parts th.hbc, .parts td.hbc { text-align: center; }
 
-/* chevron（パーツ05） */
+/* chevron (Part 05) */
 .parts .chev { display: flex; gap: 0; flex: 0 0 auto; }
 .parts .chev .cv { flex: 1; position: relative; background: var(--soft-blue); border: 0; padding: 24px 19px 24px 43px; clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 50%, calc(100% - 28px) 100%, 0 100%, 28px 50%); display: flex; flex-direction: column; }
 .parts .chev .cv:first-child { clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 50%, calc(100% - 28px) 100%, 0 100%); padding-left: 24px; }
@@ -2897,7 +2897,7 @@ body {
 .parts .chev .t { font-size: 18px; font-weight: 700; margin: 5px 0 7px 0; color: var(--ink); }
 .parts .chev .x { font-size: 15px; line-height: 1.55; color: var(--ink); }
 
-/* two（左表・中央三角・右ブレット。パーツ06・07・13・17・25） */
+/* two (Left table, center triangle, right bullets. Parts 06, 07, 13, 17, 25) */
 .parts .two { display: grid; grid-template-columns: 1.5fr auto 1fr; gap: 28px; flex: 1; min-height: 0; align-items: stretch; }
 .parts .two > div:first-child, .parts .two > div:last-child { display: flex; flex-direction: column; min-height: 0; }
 .parts .two > div:last-child > ul { flex: 1; display: flex; flex-direction: column; justify-content: center; }
@@ -2906,7 +2906,7 @@ body {
 .parts .two li { margin-bottom: 12px; }
 .parts .tri { align-self: center; width: 0; height: 0; border-top: 24px solid transparent; border-bottom: 24px solid transparent; border-left: 28px solid var(--cyan); }
 
-/* cover / 章扉 / 裏表紙（パーツ01・04・10。タイトル欄なし） */
+/* cover / section divider / back cover (Parts 01, 04, 10. No title bar) */
 .slide--parts-cover .sinner { grid-template-rows: auto 1fr auto; }
 .parts-cover { --pserif: var(--font-serif, "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", Georgia, "Times New Roman", serif); padding-top: 180px; color: var(--ink); }
 .parts-cover .big { font-family: var(--pserif); font-size: 57px; font-weight: 700; color: var(--ink); line-height: 1.25; max-width: 1040px; }
@@ -2920,7 +2920,7 @@ body {
 .parts-cover .cbig { font-family: var(--pserif); font-size: 50px; font-weight: 700; color: var(--ink); margin-top: 19px; max-width: 1040px; line-height: 1.25; }
 .parts-cover .desc { font-size: 20px; color: var(--blue); margin-top: 19px; }
 
-/* toc（パーツ03） */
+/* toc (Part 03) */
 .parts .toc { margin-top: 19px; }
 .parts .toc .ti { display: grid; grid-template-columns: 66px 1fr 66px; gap: 19px; padding: 17px 0; border-bottom: 1px solid var(--rule); font-size: 19px; align-items: baseline; }
 .parts .toc .ti:last-child { border-bottom: 0; }
@@ -2934,12 +2934,12 @@ body {
 .parts .legend .li-a { background: var(--soft-blue); }
 .parts .legend .li-b { background: var(--navy); }
 
-/* 軸見出し（.axh）・注記 */
+/* axis header (.axh) / note */
 .parts .axh { font-family: var(--pserif); font-size: 19px; font-weight: 700; color: var(--ink); border-bottom: 2px solid var(--ink); padding: 0 0 7px 0; margin-bottom: 17px; flex: 0 0 auto; display: flex; justify-content: space-between; align-items: baseline; }
 .parts .axh .u { font-family: var(--font-sans); font-size: 14px; font-weight: 400; color: var(--muted); }
 .parts .note { font-size: 13px; letter-spacing: 0.08em; font-weight: 700; color: var(--blue); border-bottom: 1px solid var(--cyan); align-self: flex-start; padding-bottom: 4px; flex: 0 0 auto; }
 
-/* 左サイドの主張パネル（パーツ11） */
+/* left-side claim panel (Part 11) */
 .parts .side { display: grid; grid-template-columns: 293px 1fr; gap: 0; flex: 1; min-height: 0; }
 .parts .side .sp { background: var(--navy); color: #fff; padding: 28px; display: flex; flex-direction: column; }
 .parts .side .sp .cn { font-family: var(--pserif); font-size: 43px; font-weight: 700; color: var(--cyan); line-height: 1; }
@@ -2947,7 +2947,7 @@ body {
 .parts .side .sp .cm { font-family: var(--pserif); font-size: 23px; font-weight: 700; line-height: 1.55; margin-top: auto; }
 .parts .side .sb { padding: 0 0 0 38px; display: flex; flex-direction: column; min-height: 0; }
 
-/* レバー矢印表（パーツ12） */
+/* lever arrow table (Part 12) */
 .parts .lev { width: 100%; border-collapse: collapse; font-size: 17px; }
 .parts .lev th { font-size: 19px; }
 .parts .lev td { padding: 14px 12px; }
@@ -2955,7 +2955,7 @@ body {
 .parts .lev .up { background: var(--blue); }
 .parts .lev .dn { background: var(--pgrey); color: var(--ink); }
 
-/* 状態ヒートマップ（パーツ13） */
+/* status heatmap (Part 13) */
 .parts .hm { width: 100%; border-collapse: collapse; font-size: 16px; }
 .parts .hm th { font-size: 18px; padding: 9px; }
 .parts .hm td { padding: 10px 12px; border-bottom: 1px solid var(--hairline); }
@@ -2966,7 +2966,7 @@ body {
 .parts .v1 { background: var(--soft-blue); }
 .parts .v0 { background: var(--hairline); }
 
-/* ハーベイボール（パーツ14） */
+/* harvey ball (Part 14) */
 .parts .hb { width: 22px; height: 22px; display: inline-block; border: 1px solid var(--ink); border-radius: 50%; position: relative; vertical-align: -3px; }
 .parts .hb i { position: absolute; inset: 0; background: var(--ink); border-radius: 50%; }
 .parts .hb.q1 i { clip-path: polygon(50% 50%, 50% 0, 100% 0, 100% 50%); }
@@ -2975,7 +2975,7 @@ body {
 .parts .hb.q4 i { clip-path: none; }
 .parts .hb.q0 i { display: none; }
 
-/* ドットマトリクス（パーツ15） */
+/* dot matrix (Part 15) */
 .parts .dots { display: grid; grid-template-columns: repeat(10, 10px); gap: 4px; }
 .parts .dots i { width: 10px; height: 10px; background: var(--hairline); display: block; }
 .parts .dots i.on { background: var(--blue); }
@@ -2983,7 +2983,7 @@ body {
 .parts .dotcol .dv { font-size: 25px; font-weight: 700; color: var(--ink); }
 .parts .dotcol .dl { font-size: 15px; color: var(--ink); text-align: center; line-height: 1.5; }
 
-/* 柱＋土台（パーツ19） */
+/* pillars + foundation (Part 19) */
 .parts .pil { display: grid; gap: 19px; flex: 0 0 auto; }
 .parts .pil .p { background: var(--soft-blue); padding: 24px 21px; display: flex; flex-direction: column; gap: 9px; justify-content: center; }
 .parts .pil .p .pt { font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.4; }
@@ -2992,14 +2992,14 @@ body {
 .parts .base + .base { margin-top: 12px; }
 .parts .base b { font-size: 18px; color: var(--cyan); }
 
-/* ニュース根拠グリッド（パーツ21） */
+/* news evidence grid (Part 21) */
 .parts .clip { background: var(--soft-blue); padding: 21px 24px; display: flex; flex-direction: column; gap: 9px; }
 .parts .clip .cd { font-size: 13px; color: var(--muted); font-style: italic; }
 .parts .clip .ch { font-family: var(--pserif); font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.45; }
 .parts .clip .cx { font-size: 14px; color: var(--ink); line-height: 1.6; }
 .parts .clip .cg { align-self: flex-start; background: var(--navy); color: #fff; font-size: 13px; font-weight: 700; padding: 5px 12px; letter-spacing: 0.06em; }
 
-/* 対向シェブロン（パーツ20） */
+/* opposing chevrons (Part 20) */
 .parts .opp { display: grid; grid-template-columns: 1fr 217px 1fr; gap: 28px; flex: 1; min-height: 0; align-items: stretch; }
 .parts .opp .ol { display: flex; flex-direction: column; }
 .parts .opp .ol .oi { flex: 1; display: flex; align-items: center; font-size: 17px; line-height: 1.55; color: var(--ink); border-bottom: 1px solid var(--rule); padding: 9px 0; }
@@ -3008,7 +3008,7 @@ body {
 .parts .opp .oc .ob { background: var(--navy); color: #fff; text-align: center; font-family: var(--pserif); font-size: 23px; font-weight: 700; padding: 43px 14px; clip-path: polygon(0 0, 100% 0, 100% 78%, 50% 100%, 0 78%); }
 .parts .opp .oc .ob.alt { background: var(--blue); }
 
-/* セパレーター（章扉＝アジェンダ再掲。パーツ27） */
+/* separator (section divider = repeated agenda. Part 27) */
 .parts .agd { display: flex; flex-direction: column; flex: 1; min-height: 0; justify-content: center; }
 .parts .agd .ai { display: grid; grid-template-columns: 66px 1fr 76px; gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--hairline); color: var(--muted); }
 .parts .agd .ai:last-child { border-bottom: 0; }
@@ -3020,12 +3020,12 @@ body {
 .parts .agd .ai.on .at { font-size: 35px; }
 .parts .agd .ai.on .ap { color: var(--muted); }
 
-/* 図（SVG。パーツ16・17・18・22・23・24。viewBox はパーツ集と同じ 900×300 等） */
+/* figures (SVG. Parts 16, 17, 18, 22, 23, 24. viewBox same as parts library: 900x300, etc.) */
 .parts svg.pfig { flex: 1; min-height: 0; width: 100%; font-family: var(--font-sans); }
 .parts svg.pfig .serif { font-family: var(--pserif); }
 
 
-/* ── 印刷・PDF（Chrome --print-to-pdf）: 1スライド=1ページ・16:9 338.67mm×190.5mm ── */
+/* -- Print / PDF (Chrome --print-to-pdf): 1 slide = 1 page, 16:9 338.67mm x 190.5mm -- */
 @page{size:338.67mm 190.5mm;margin:0}
 @media print{
   html,body{background:#fff}
@@ -3038,350 +3038,350 @@ body {
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">01  executive_summary</div>
-    <h1 class="title">エグゼクティブサマリー</h1>
+    <h1 class="title">Executive Summary</h1>
     <div class="rule"></div>
-    <div class="content"><div class="three-col"><div><div class="section-label">タイトル 2</div><div class="body-copy">Text 1</div></div><div><div class="section-label">タイトル 3</div><div class="body-copy">Text 2</div></div><div><div class="section-label">タイトル 4</div><div class="body-copy">Text 3</div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>2</span></footer>
+    <div class="content"><div class="three-col"><div><div class="section-label">Title 2</div><div class="body-copy">Text 1</div></div><div><div class="section-label">Title 3</div><div class="body-copy">Text 2</div></div><div><div class="section-label">Title 4</div><div class="body-copy">Text 3</div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>2</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">02  evidence_basis</div>
-    <h1 class="title">調査の土台</h1>
+    <h1 class="title">Research Foundation</h1>
     <div class="rule"></div>
-    <div class="content"><div class="basis"><div class="basis-why">指標名、単位、YYYY〜YYYY年</div><div class="basis-rows"><div class="basis-row"><div class="basis-value">180+</div><div class="basis-copy">Text 1</div></div><div class="basis-row"><div class="basis-value">2.4M</div><div class="basis-copy">Text 2</div></div><div class="basis-row"><div class="basis-value">640</div><div class="basis-copy">Text 3</div></div><div class="basis-row"><div class="basis-value">12</div><div class="basis-copy">Text 4</div></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>3</span></footer>
+    <div class="content"><div class="basis"><div class="basis-why">Metric Name, Units, YYYY-YYYY</div><div class="basis-rows"><div class="basis-row"><div class="basis-value">180+</div><div class="basis-copy">Text 1</div></div><div class="basis-row"><div class="basis-value">2.4M</div><div class="basis-copy">Text 2</div></div><div class="basis-row"><div class="basis-value">640</div><div class="basis-copy">Text 3</div></div><div class="basis-row"><div class="basis-value">12</div><div class="basis-copy">Text 4</div></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>3</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">03  big_stat_pair</div>
-    <h1 class="title">大型数値の対比</h1>
+    <h1 class="title">Big Stat Comparison</h1>
     <div class="rule"></div>
-    <div class="content"><div class="metric-sub">指標名、単位、YYYY〜YYYY年</div><div class="bigstats"><div class="bigstat"><div class="bigstat-value">18%</div><div class="bigstat-label">ラベル1</div><div class="bigstat-note">注：前提や注記を記載</div></div><div class="bigstat"><div class="bigstat-value">7</div><div class="bigstat-label">ラベル2</div><div class="bigstat-note">注：前提や注記を記載</div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>4</span></footer>
+    <div class="content"><div class="metric-sub">Metric Name, Units, YYYY-YYYY</div><div class="bigstats"><div class="bigstat"><div class="bigstat-value">18%</div><div class="bigstat-label">Label 1</div><div class="bigstat-note">Note: Detail assumptions or notes</div></div><div class="bigstat"><div class="bigstat-value">7</div><div class="bigstat-label">Label 2</div><div class="bigstat-note">Note: Detail assumptions or notes</div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>4</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">04  kpi_dashboard</div>
-    <h1 class="title">KPI一覧</h1>
+    <h1 class="title">KPI Dashboard</h1>
     <div class="rule"></div>
-    <div class="content"><div class="kpi-grid"><div class="kpi-tile"><div class="kpi-label">ラベル1</div><div class="kpi-value">-18%</div><div class="kpi-delta">Text 1</div><div class="kpi-note">注：前提や注記を記載</div></div><div class="kpi-tile"><div class="kpi-label">ラベル2</div><div class="kpi-value">0 days</div><div class="kpi-delta">Text 2</div><div class="kpi-note">注：前提や注記を記載</div></div><div class="kpi-tile"><div class="kpi-label">ラベル3</div><div class="kpi-value">2 / 4</div><div class="kpi-delta">Text 3</div><div class="kpi-note">注：前提や注記を記載</div></div><div class="kpi-tile"><div class="kpi-label">ラベル4</div><div class="kpi-value">$6M</div><div class="kpi-delta">Text 4</div><div class="kpi-note">注：前提や注記を記載</div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>5</span></footer>
+    <div class="content"><div class="kpi-grid"><div class="kpi-tile"><div class="kpi-label">Label 1</div><div class="kpi-value">-18%</div><div class="kpi-delta">Text 1</div><div class="kpi-note">Note: Detail assumptions or notes</div></div><div class="kpi-tile"><div class="kpi-label">Label 2</div><div class="kpi-value">0 days</div><div class="kpi-delta">Text 2</div><div class="kpi-note">Note: Detail assumptions or notes</div></div><div class="kpi-tile"><div class="kpi-label">Label 3</div><div class="kpi-value">2 / 4</div><div class="kpi-delta">Text 3</div><div class="kpi-note">Note: Detail assumptions or notes</div></div><div class="kpi-tile"><div class="kpi-label">Label 4</div><div class="kpi-value">$6M</div><div class="kpi-delta">Text 4</div><div class="kpi-note">Note: Detail assumptions or notes</div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>5</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">05  chart_insight</div>
-    <h1 class="title">単一チャート＋含意</h1>
+    <h1 class="title">Single Chart + Strategic Implications</h1>
     <div class="rule"></div>
-    <div class="content"><div class="two-col"><div><div class="section-label">指標名、単位</div><div class="bar-chart" style="grid-template-columns: repeat(4, minmax(0, 1fr));"><div class="bar-wrap"><div class="bar-value">32</div><div class="bar" style="height: 45%;"></div><div class="bar-label">ラベル1</div></div><div class="bar-wrap"><div class="bar-value">41</div><div class="bar" style="height: 58%;"></div><div class="bar-label">ラベル2</div></div><div class="bar-wrap"><div class="bar-value">49</div><div class="bar cyan" style="height: 69%;"></div><div class="bar-label">ラベル3</div></div><div class="bar-wrap"><div class="bar-value">58</div><div class="bar blue" style="height: 82%;"></div><div class="bar-label">ラベル4</div></div></div></div><div class="insight-panel"><div class="section-label">タイトル 2</div><div class="body-copy">Text 1</div></div></div></div>
-    <footer class="footer"><span class="source">注：前提・注記を記載 出典：Source 1</span><span>6</span></footer>
+    <div class="content"><div class="two-col"><div><div class="section-label">Metric Name, Units</div><div class="bar-chart" style="grid-template-columns: repeat(4, minmax(0, 1fr));"><div class="bar-wrap"><div class="bar-value">32</div><div class="bar" style="height: 45%;"></div><div class="bar-label">Label 1</div></div><div class="bar-wrap"><div class="bar-value">41</div><div class="bar" style="height: 58%;"></div><div class="bar-label">Label 2</div></div><div class="bar-wrap"><div class="bar-value">49</div><div class="bar cyan" style="height: 69%;"></div><div class="bar-label">Label 3</div></div><div class="bar-wrap"><div class="bar-value">58</div><div class="bar blue" style="height: 82%;"></div><div class="bar-label">Label 4</div></div></div></div><div class="insight-panel"><div class="section-label">Title 2</div><div class="body-copy">Text 1</div></div></div></div>
+    <footer class="footer"><span class="source">Note: Detail assumptions or notes Source: Source 1</span><span>6</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">06  stacked_bar</div>
-    <h1 class="title">積み上げ棒</h1>
+    <h1 class="title">Stacked Bar Breakdown</h1>
     <div class="rule"></div>
-    <div class="content"><div class="chart-unit">指標名、単位</div><div class="stack-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 102px;">40</div><div class="stack-seg s1" style="height: 77px;">30</div><div class="stack-seg s2" style="height: 51px;">20</div></div><div class="stack-col-label">ラベル4</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 141px;">55</div><div class="stack-seg s1" style="height: 82px;">32</div><div class="stack-seg s2" style="height: 56px;">22</div></div><div class="stack-col-label">ラベル5</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 184px;">72</div><div class="stack-seg s1" style="height: 84px;">33</div><div class="stack-seg s2" style="height: 61px;">24</div></div><div class="stack-col-label">ラベル6</div></div></div><div class="stack-legend"><div class="legend-item"><span class="legend-swatch s0"></span>ラベル1</div><div class="legend-item"><span class="legend-swatch s1"></span>ラベル2</div><div class="legend-item"><span class="legend-swatch s2"></span>ラベル3</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>7</span></footer>
+    <div class="content"><div class="chart-unit">Metric Name, Units</div><div class="stack-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 102px;">40</div><div class="stack-seg s1" style="height: 77px;">30</div><div class="stack-seg s2" style="height: 51px;">20</div></div><div class="stack-col-label">Label 4</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 141px;">55</div><div class="stack-seg s1" style="height: 82px;">32</div><div class="stack-seg s2" style="height: 56px;">22</div></div><div class="stack-col-label">Label 5</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 184px;">72</div><div class="stack-seg s1" style="height: 84px;">33</div><div class="stack-seg s2" style="height: 61px;">24</div></div><div class="stack-col-label">Label 6</div></div></div><div class="stack-legend"><div class="legend-item"><span class="legend-swatch s0"></span>Label 1</div><div class="legend-item"><span class="legend-swatch s1"></span>Label 2</div><div class="legend-item"><span class="legend-swatch s2"></span>Label 3</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>7</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">07  waterfall</div>
-    <h1 class="title">寄与度ブリッジ</h1>
+    <h1 class="title">Contribution Bridge / Waterfall</h1>
     <div class="rule"></div>
-    <div class="content"><div class="two-col"><div><div class="section-label">指標名、単位</div><div class="waterfall"><div class="wf-item"><div class="wf-value">100</div><div class="wf-bar" style="height: 50%;"></div><div class="wf-label">ラベル1</div></div><div class="wf-item"><div class="wf-value">+18</div><div class="wf-bar up" style="height: 9%;"></div><div class="wf-label">ラベル2</div></div><div class="wf-item"><div class="wf-value">+24</div><div class="wf-bar up" style="height: 12%;"></div><div class="wf-label">ラベル3</div></div><div class="wf-item"><div class="wf-value">-9</div><div class="wf-bar down" style="height: 5%;"></div><div class="wf-label">ラベル4</div></div><div class="wf-item"><div class="wf-value">+7</div><div class="wf-bar up" style="height: 4%;"></div><div class="wf-label">ラベル5</div></div><div class="wf-item"><div class="wf-value">140</div><div class="wf-bar blue" style="height: 70%;"></div><div class="wf-label">ラベル6</div></div></div></div><div class="insight-panel"><div class="section-label">タイトル 2</div><div class="body-copy">Text 1</div></div></div></div>
-    <footer class="footer"><span class="source">注：前提・注記を記載 出典：Source 1</span><span>8</span></footer>
+    <div class="content"><div class="two-col"><div><div class="section-label">Metric Name, Units</div><div class="waterfall"><div class="wf-item"><div class="wf-value">100</div><div class="wf-bar" style="height: 50%;"></div><div class="wf-label">Label 1</div></div><div class="wf-item"><div class="wf-value">+18</div><div class="wf-bar up" style="height: 9%;"></div><div class="wf-label">Label 2</div></div><div class="wf-item"><div class="wf-value">+24</div><div class="wf-bar up" style="height: 12%;"></div><div class="wf-label">Label 3</div></div><div class="wf-item"><div class="wf-value">-9</div><div class="wf-bar down" style="height: 5%;"></div><div class="wf-label">Label 4</div></div><div class="wf-item"><div class="wf-value">+7</div><div class="wf-bar up" style="height: 4%;"></div><div class="wf-label">Label 5</div></div><div class="wf-item"><div class="wf-value">140</div><div class="wf-bar blue" style="height: 70%;"></div><div class="wf-label">Label 6</div></div></div></div><div class="insight-panel"><div class="section-label">Title 2</div><div class="body-copy">Text 1</div></div></div></div>
+    <footer class="footer"><span class="source">Note: Detail assumptions or notes Source: Source 1</span><span>8</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">08  true_waterfall</div>
-    <h1 class="title">増減ブリッジ（厳密）</h1>
+    <h1 class="title">Full Variance Bridge</h1>
     <div class="rule"></div>
-    <div class="content"><div class="chart-unit">指標名、単位</div><div class="twf"><div class="twf-col"><div class="twf-value">11</div><div class="twf-bar base" style="height: 220px; margin-bottom: 0px;"></div><div class="twf-label">ラベル1</div></div><div class="twf-col"><div class="twf-value">−3</div><div class="twf-bar down" style="height: 60px; margin-bottom: 160px;"></div><div class="twf-label">ラベル2</div></div><div class="twf-col"><div class="twf-value">+4</div><div class="twf-bar up" style="height: 80px; margin-bottom: 160px;"></div><div class="twf-label">ラベル3</div></div><div class="twf-col"><div class="twf-value">+3</div><div class="twf-bar up" style="height: 60px; margin-bottom: 240px;"></div><div class="twf-label">ラベル4</div></div><div class="twf-col"><div class="twf-value">15</div><div class="twf-bar total" style="height: 300px; margin-bottom: 0px;"></div><div class="twf-label">ラベル5</div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>9</span></footer>
+    <div class="content"><div class="chart-unit">Metric Name, Units</div><div class="twf"><div class="twf-col"><div class="twf-value">11</div><div class="twf-bar base" style="height: 220px; margin-bottom: 0px;"></div><div class="twf-label">Label 1</div></div><div class="twf-col"><div class="twf-value">−3</div><div class="twf-bar down" style="height: 60px; margin-bottom: 160px;"></div><div class="twf-label">Label 2</div></div><div class="twf-col"><div class="twf-value">+4</div><div class="twf-bar up" style="height: 80px; margin-bottom: 160px;"></div><div class="twf-label">Label 3</div></div><div class="twf-col"><div class="twf-value">+3</div><div class="twf-bar up" style="height: 60px; margin-bottom: 240px;"></div><div class="twf-label">Label 4</div></div><div class="twf-col"><div class="twf-value">15</div><div class="twf-bar total" style="height: 300px; margin-bottom: 0px;"></div><div class="twf-label">Label 5</div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>9</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">09  small_multiples</div>
-    <h1 class="title">小図の並列比較</h1>
+    <h1 class="title">Small Multiples Comparison</h1>
     <div class="rule"></div>
-    <div class="content"><div class="sm-grid"><div class="sm-panel"><div class="sm-title">ラベル1</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 30%;"></div><div class="sm-bar-label">ラベル2</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 53%;"></div><div class="sm-bar-label">ラベル3</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 88%;"></div><div class="sm-bar-label">ラベル4</div></div></div></div><div class="sm-panel"><div class="sm-title">ラベル5</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 23%;"></div><div class="sm-bar-label">ラベル6</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 42%;"></div><div class="sm-bar-label">ラベル7</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 67%;"></div><div class="sm-bar-label">ラベル8</div></div></div></div><div class="sm-panel"><div class="sm-title">ラベル9</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 12%;"></div><div class="sm-bar-label">ラベル10</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 21%;"></div><div class="sm-bar-label">ラベル11</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 35%;"></div><div class="sm-bar-label">ラベル12</div></div></div></div><div class="sm-panel"><div class="sm-title">ラベル13</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 18%;"></div><div class="sm-bar-label">ラベル14</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 33%;"></div><div class="sm-bar-label">ラベル15</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 56%;"></div><div class="sm-bar-label">ラベル16</div></div></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>10</span></footer>
+    <div class="content"><div class="sm-grid"><div class="sm-panel"><div class="sm-title">Label 1</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 30%;"></div><div class="sm-bar-label">Label 2</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 53%;"></div><div class="sm-bar-label">Label 3</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 88%;"></div><div class="sm-bar-label">Label 4</div></div></div></div><div class="sm-panel"><div class="sm-title">Label 5</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 23%;"></div><div class="sm-bar-label">Label 6</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 42%;"></div><div class="sm-bar-label">Label 7</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 67%;"></div><div class="sm-bar-label">Label 8</div></div></div></div><div class="sm-panel"><div class="sm-title">Label 9</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 12%;"></div><div class="sm-bar-label">Label 10</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 21%;"></div><div class="sm-bar-label">Label 11</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 35%;"></div><div class="sm-bar-label">Label 12</div></div></div></div><div class="sm-panel"><div class="sm-title">Label 13</div><div class="sm-chart"><div class="sm-bar-wrap"><div class="sm-bar" style="height: 18%;"></div><div class="sm-bar-label">Label 14</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 33%;"></div><div class="sm-bar-label">Label 15</div></div><div class="sm-bar-wrap"><div class="sm-bar" style="height: 56%;"></div><div class="sm-bar-label">Label 16</div></div></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>10</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">10  comparison_table</div>
-    <h1 class="title">選択肢の比較表</h1>
+    <h1 class="title">Multi-Option Evaluation Matrix</h1>
     <div class="rule"></div>
-    <div class="content"><div class="comparison"><div class="head">評価軸</div><div class="head">自社</div><div class="head">競合</div><div class="head">含意</div><div class="row-label">ラベル1</div><div>ラベル2</div><div>ラベル3</div><div>Text 1,Text 2</div><div class="row-label">ラベル4</div><div>ラベル5</div><div>ラベル6</div><div>Text 3,Text 4</div><div class="row-label">ラベル7</div><div>ラベル8</div><div>ラベル9</div><div>Text 5,Text 6</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>11</span></footer>
+    <div class="content"><div class="comparison"><div class="head">Evaluation Axis</div><div class="head">Our Co.</div><div class="head">Competitor</div><div class="head">Implications</div><div class="row-label">Label 1</div><div>Label 2</div><div>Label 3</div><div>Text 1,Text 2</div><div class="row-label">Label 4</div><div>Label 5</div><div>Label 6</div><div>Text 3,Text 4</div><div class="row-label">Label 7</div><div>Label 8</div><div>Label 9</div><div>Text 5,Text 6</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>11</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">11  scenario_table</div>
-    <h1 class="title">シナリオ比較表</h1>
+    <h1 class="title">Scenario Comparison Table</h1>
     <div class="rule"></div>
-    <div class="content"><table class="scenario-table"><thead><tr><th>シナリオ</th><th>結果</th><th>前提</th><th>経営への含意</th></tr></thead><tbody><tr><td><span class="lead">ラベル1</span></td><td><span class="num">Text 1</span></td><td>前提1-1：TextをTextと置く,前提1-2：Textは変わらないとする</td><td>Text 1をText 2まで積み増す,Text 3の判断をN月に前倒す</td></tr><tr><td><span class="lead">ラベル2</span></td><td><span class="num">Text 4</span></td><td>前提2-1：TextをTextと置く,前提2-2：Textは変わらないとする</td><td>Text 4をText 5まで積み増す,Text 6の判断をN月に前倒す</td></tr><tr><td><span class="lead">ラベル3</span></td><td><span class="num">Text 7</span></td><td>前提3-1：TextをTextと置く,前提3-2：Textは変わらないとする</td><td>Text 7をText 8まで積み増す,Text 9の判断をN月に前倒す</td></tr></tbody></table></div>
-    <footer class="footer"><span class="source">注：前提・注記を記載 出典：Source 1</span><span>12</span></footer>
+    <div class="content"><table class="scenario-table"><thead><tr><th>Scenario</th><th>Outcome</th><th>Assumptions</th><th>Strategic Implications</th></tr></thead><tbody><tr><td><span class="lead">Label 1</span></td><td><span class="num">Text 1</span></td><td>Assumption 1-1: Set Text as Text, Assumption 1-2: Assume Text remains constant</td><td>Build up Text 1 to Text 2, accelerate Text 3 decision to Month N</td></tr><tr><td><span class="lead">Label 2</span></td><td><span class="num">Text 4</span></td><td>Assumption 2-1: Set Text as Text, Assumption 2-2: Assume Text remains constant</td><td>Build up Text 4 to Text 5, accelerate Text 6 decision to Month N</td></tr><tr><td><span class="lead">Label 3</span></td><td><span class="num">Text 7</span></td><td>Assumption 3-1: Set Text as Text, Assumption 3-2: Assume Text remains constant</td><td>Build up Text 7 to Text 8, accelerate Text 9 decision to Month N</td></tr></tbody></table></div>
+    <footer class="footer"><span class="source">Note: Detail assumptions or notes Source: Source 1</span><span>12</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">12  risk_table</div>
-    <h1 class="title">リスク一覧表</h1>
+    <h1 class="title">Risk Assessment & Mitigation Matrix</h1>
     <div class="rule"></div>
-    <div class="content"><table class="risk-table"><thead><tr><th>リスク</th><th>兆候</th><th>対応策</th><th>担当</th></tr></thead><tbody><tr class="risk-high"><td><span class="lead">Text 1</span></td><td>Text 1がNを下回る,Text 2のNがNか月続く</td><td>Text 3を先に確保する,Text 4の代替案を用意する</td><td>ラベル1</td></tr><tr class="risk-med"><td><span class="lead">Text 4</span></td><td>Text 5がNを下回る,Text 6のNがNか月続く</td><td>Text 7を先に確保する,Text 8の代替案を用意する</td><td>ラベル2</td></tr><tr class="risk-med"><td><span class="lead">Text 7</span></td><td>Text 9がNを下回る,Text 10のNがNか月続く</td><td>Text 11を先に確保する,Text 12の代替案を用意する</td><td>ラベル3</td></tr></tbody></table></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>13</span></footer>
+    <div class="content"><table class="risk-table"><thead><tr><th>Risk</th><th>Early Indicator</th><th>Mitigation Measure</th><th>Owner</th></tr></thead><tbody><tr class="risk-high"><td><span class="lead">Text 1</span></td><td>Text 1 falls below N, N of Text 2 persists for N months</td><td>Secure Text 3 in advance, prepare fallback plan for Text 4</td><td>Label 1</td></tr><tr class="risk-med"><td><span class="lead">Text 4</span></td><td>Text 5 falls below N, N of Text 6 persists for N months</td><td>Secure Text 7 in advance, prepare fallback plan for Text 8</td><td>Label 2</td></tr><tr class="risk-med"><td><span class="lead">Text 7</span></td><td>Text 9 falls below N, N of Text 10 persists for N months</td><td>Secure Text 11 in advance, prepare fallback plan for Text 12</td><td>Label 3</td></tr></tbody></table></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>13</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">13  horizontal_axis_table</div>
-    <h1 class="title">横軸評価表</h1>
+    <h1 class="title">Horizontal Axis Evaluation Table</h1>
     <div class="rule"></div>
-    <div class="content"><div class="axis-callout"><div class="axis-callout-text">網掛けの行＝Text 1（この行だけ立てている理由を1行で）</div></div><div class="axis-table-wrap"><div class="axis-table" style="grid-template-columns: 1fr 2.1fr 2.3fr 1.2fr 1.3fr;"><div class="axis-col-header"><div class="axis-header-label">列見出し1</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">列見出し2</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">列見出し3</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">列見出し4</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">列見出し5</div><div class="axis-header-rule"></div></div><div class="axis-row"><div class="axis-cell label highlight">値</div><div class="axis-cell highlight">値</div><div class="axis-cell highlight">値</div><div class="axis-cell highlight">値</div><div class="axis-cell highlight">値</div></div><div class="axis-row"><div class="axis-cell label">値</div><div class="axis-cell">値</div><div class="axis-cell">値</div><div class="axis-cell">値</div><div class="axis-cell">値</div></div><div class="axis-row"><div class="axis-cell label">値</div><div class="axis-cell">値</div><div class="axis-cell">値</div><div class="axis-cell">値</div><div class="axis-cell">値</div></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>14</span></footer>
+    <div class="content"><div class="axis-callout"><div class="axis-callout-text">Shaded row = Text 1 (One-line rationale for highlighting this row)</div></div><div class="axis-table-wrap"><div class="axis-table" style="grid-template-columns: 1fr 2.1fr 2.3fr 1.2fr 1.3fr;"><div class="axis-col-header"><div class="axis-header-label">Col Header 1</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">Col Header 2</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">Col Header 3</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">Col Header 4</div><div class="axis-header-rule"></div></div><div class="axis-col-header"><div class="axis-header-label">Col Header 5</div><div class="axis-header-rule"></div></div><div class="axis-row"><div class="axis-cell label highlight">Value</div><div class="axis-cell highlight">Value</div><div class="axis-cell highlight">Value</div><div class="axis-cell highlight">Value</div><div class="axis-cell highlight">Value</div></div><div class="axis-row"><div class="axis-cell label">Value</div><div class="axis-cell">Value</div><div class="axis-cell">Value</div><div class="axis-cell">Value</div><div class="axis-cell">Value</div></div><div class="axis-row"><div class="axis-cell label">Value</div><div class="axis-cell">Value</div><div class="axis-cell">Value</div><div class="axis-cell">Value</div><div class="axis-cell">Value</div></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>14</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">14  heatmap_table</div>
-    <h1 class="title">ヒートマップ表</h1>
+    <h1 class="title">Heatmap Matrix</h1>
     <div class="rule"></div>
-    <div class="content"><div class="heat" style="grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));"><div class="heat-corner">行の軸名</div><div class="heat-colhead">列見出し1</div><div class="heat-colhead">列見出し2</div><div class="heat-colhead">列見出し3</div><div class="heat-colhead">列見出し4</div><div class="heat-rowhead">行見出し1</div><div class="heat-cell lvl-3">高</div><div class="heat-cell lvl-2">中</div><div class="heat-cell lvl-1">低</div><div class="heat-cell lvl-2">中</div><div class="heat-rowhead">行見出し2</div><div class="heat-cell lvl-2">中</div><div class="heat-cell lvl-1">低</div><div class="heat-cell lvl-0">なし</div><div class="heat-cell lvl-1">低</div><div class="heat-rowhead">行見出し3</div><div class="heat-cell lvl-3">高</div><div class="heat-cell lvl-3">高</div><div class="heat-cell lvl-2">中</div><div class="heat-cell lvl-3">高</div><div class="heat-rowhead">行見出し4</div><div class="heat-cell lvl-2">中</div><div class="heat-cell lvl-1">低</div><div class="heat-cell lvl-0">なし</div><div class="heat-cell lvl-1">低</div></div><div class="heat-legend"><div class="legend-item"><span class="legend-swatch lvl-0" style="background: #fff;"></span>なし</div><div class="legend-item"><span class="legend-swatch lvl-1" style="background: var(--soft-blue);"></span>低</div><div class="legend-item"><span class="legend-swatch lvl-2" style="background: var(--cyan);"></span>中</div><div class="legend-item"><span class="legend-swatch lvl-3" style="background: var(--blue);"></span>高</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>15</span></footer>
+    <div class="content"><div class="heat" style="grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));"><div class="heat-corner">Row Axis</div><div class="heat-colhead">Col Header 1</div><div class="heat-colhead">Col Header 2</div><div class="heat-colhead">Col Header 3</div><div class="heat-colhead">Col Header 4</div><div class="heat-rowhead">Row Header 1</div><div class="heat-cell lvl-3">High</div><div class="heat-cell lvl-2">Med</div><div class="heat-cell lvl-1">Low</div><div class="heat-cell lvl-2">Med</div><div class="heat-rowhead">Row Header 2</div><div class="heat-cell lvl-2">Med</div><div class="heat-cell lvl-1">Low</div><div class="heat-cell lvl-0">None</div><div class="heat-cell lvl-1">Low</div><div class="heat-rowhead">Row Header 3</div><div class="heat-cell lvl-3">High</div><div class="heat-cell lvl-3">High</div><div class="heat-cell lvl-2">Med</div><div class="heat-cell lvl-3">High</div><div class="heat-rowhead">Row Header 4</div><div class="heat-cell lvl-2">Med</div><div class="heat-cell lvl-1">Low</div><div class="heat-cell lvl-0">None</div><div class="heat-cell lvl-1">Low</div></div><div class="heat-legend"><div class="legend-item"><span class="legend-swatch lvl-0" style="background: #fff;"></span>None</div><div class="legend-item"><span class="legend-swatch lvl-1" style="background: var(--soft-blue);"></span>Low</div><div class="legend-item"><span class="legend-swatch lvl-2" style="background: var(--cyan);"></span>Med</div><div class="legend-item"><span class="legend-swatch lvl-3" style="background: var(--blue);"></span>High</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>15</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">15  matrix_2x2</div>
-    <h1 class="title">2×2マトリクス</h1>
+    <h1 class="title">2x2 Strategic Matrix</h1>
     <div class="rule"></div>
-    <div class="content"><div class="matrix-wrap"><div class="matrix-chart"><div class="matrix-axis-y">縦軸名（上ほど高い）</div><div class="matrix-axis-x">横軸名（右ほど高い）</div><div class="matrix-item priority" style="left: 72%; top: 24%;">施策1</div><div class="matrix-item priority" style="left: 68%; top: 42%;">施策2</div><div class="matrix-item" style="left: 35%; top: 31%;">施策3</div><div class="matrix-item" style="left: 46%; top: 62%;">施策4</div><div class="matrix-item" style="left: 23%; top: 74%;">施策5</div></div><div class="insight-panel"><div class="section-label">タイトル 2</div><ul class="bullets"><li>Text 1</li><li>Text 2</li></ul></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>16</span></footer>
+    <div class="content"><div class="matrix-wrap"><div class="matrix-chart"><div class="matrix-axis-y">Vertical Axis (Higher is Higher)</div><div class="matrix-axis-x">Horizontal Axis (Right is Higher)</div><div class="matrix-item priority" style="left: 72%; top: 24%;">Initiative 1</div><div class="matrix-item priority" style="left: 68%; top: 42%;">Initiative 2</div><div class="matrix-item" style="left: 35%; top: 31%;">Initiative 3</div><div class="matrix-item" style="left: 46%; top: 62%;">Initiative 4</div><div class="matrix-item" style="left: 23%; top: 74%;">Initiative 5</div></div><div class="insight-panel"><div class="section-label">Title 2</div><ul class="bullets"><li>Text 1</li><li>Text 2</li></ul></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>16</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">16  process_matrix</div>
-    <h1 class="title">プロセス×観点の行列</h1>
+    <h1 class="title">Process x Perspective Matrix</h1>
     <div class="rule"></div>
-    <div class="content"><div class="pmx" style="grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr));"><div class="pmx-corner">行の軸名</div><div class="pmx-colhead">列見出し1</div><div class="pmx-colhead">列見出し2</div><div class="pmx-colhead">列見出し3</div><div class="pmx-rowhead">行見出し1</div><div class="pmx-cell">値</div><div class="pmx-cell">値</div><div class="pmx-cell empty"></div><div class="pmx-rowhead">行見出し2</div><div class="pmx-cell">値</div><div class="pmx-cell">値</div><div class="pmx-cell empty"></div><div class="pmx-rowhead">行見出し3</div><div class="pmx-cell">値</div><div class="pmx-cell">値</div><div class="pmx-cell">値</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>17</span></footer>
+    <div class="content"><div class="pmx" style="grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr));"><div class="pmx-corner">Row Axis</div><div class="pmx-colhead">Column Header 1</div><div class="pmx-colhead">Column Header 2</div><div class="pmx-colhead">Column Header 3</div><div class="pmx-rowhead">Row Header 1</div><div class="pmx-cell">Value</div><div class="pmx-cell">Value</div><div class="pmx-cell empty"></div><div class="pmx-rowhead">Row Header 2</div><div class="pmx-cell">Value</div><div class="pmx-cell">Value</div><div class="pmx-cell empty"></div><div class="pmx-rowhead">Row Header 3</div><div class="pmx-cell">Value</div><div class="pmx-cell">Value</div><div class="pmx-cell">Value</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>17</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">17  nested_row_matrix</div>
-    <h1 class="title">入れ子行の行列</h1>
+    <h1 class="title">Nested Row Hierarchy Matrix</h1>
     <div class="rule"></div>
-    <div class="content"><div class="nrm"><div class="nrm-group" style="grid-row:1 / span 3; grid-column:1;">ラベル1</div><div class="nrm-rowlabel" style="grid-row:1; grid-column:2;">ラベル2</div><div class="nrm-content" style="grid-row:1; grid-column:3;"><ul class="nrm-bullets"><li>Text 1</li><li>Text 2</li></ul></div><div class="nrm-rowlabel" style="grid-row:2; grid-column:2;">ラベル3</div><div class="nrm-content" style="grid-row:2; grid-column:3;"><ul class="nrm-bullets"><li>Text 3</li><li>Text 4</li></ul></div><div class="nrm-rowlabel" style="grid-row:3; grid-column:2;">ラベル4</div><div class="nrm-content" style="grid-row:3; grid-column:3;"><ul class="nrm-bullets"><li>Text 5</li><li>Text 6</li></ul></div><div class="nrm-group" style="grid-row:4 / span 2; grid-column:1;">ラベル5</div><div class="nrm-rowlabel" style="grid-row:4; grid-column:2;">ラベル6</div><div class="nrm-content" style="grid-row:4; grid-column:3;"><ul class="nrm-bullets"><li>Text 7</li></ul></div><div class="nrm-rowlabel" style="grid-row:5; grid-column:2;">ラベル7</div><div class="nrm-content" style="grid-row:5; grid-column:3;"><ul class="nrm-bullets"><li>Text 8</li></ul></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>18</span></footer>
+    <div class="content"><div class="nrm"><div class="nrm-group" style="grid-row:1 / span 3; grid-column:1;">Label 1</div><div class="nrm-rowlabel" style="grid-row:1; grid-column:2;">Label 2</div><div class="nrm-content" style="grid-row:1; grid-column:3;"><ul class="nrm-bullets"><li>Text 1</li><li>Text 2</li></ul></div><div class="nrm-rowlabel" style="grid-row:2; grid-column:2;">Label 3</div><div class="nrm-content" style="grid-row:2; grid-column:3;"><ul class="nrm-bullets"><li>Text 3</li><li>Text 4</li></ul></div><div class="nrm-rowlabel" style="grid-row:3; grid-column:2;">Label 4</div><div class="nrm-content" style="grid-row:3; grid-column:3;"><ul class="nrm-bullets"><li>Text 5</li><li>Text 6</li></ul></div><div class="nrm-group" style="grid-row:4 / span 2; grid-column:1;">Label 5</div><div class="nrm-rowlabel" style="grid-row:4; grid-column:2;">Label 6</div><div class="nrm-content" style="grid-row:4; grid-column:3;"><ul class="nrm-bullets"><li>Text 7</li></ul></div><div class="nrm-rowlabel" style="grid-row:5; grid-column:2;">Label 7</div><div class="nrm-content" style="grid-row:5; grid-column:3;"><ul class="nrm-bullets"><li>Text 8</li></ul></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>18</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">18  timeline_matrix</div>
-    <h1 class="title">時系列マトリクス</h1>
+    <h1 class="title">Timeline Matrix</h1>
     <div class="rule"></div>
-    <div class="content"><div class="tlm" style="grid-template-columns: 1fr repeat(3, minmax(0, 1.4fr));"><div class="tlm-colhead">段階</div><div class="tlm-colhead">列見出し1</div><div class="tlm-colhead">列見出し2</div><div class="tlm-colhead">列見出し3</div><div class="tlm-period">期間1</div><div class="tlm-cell">値</div><div class="tlm-cell">値</div><div class="tlm-cell">値</div><div class="tlm-period">期間2</div><div class="tlm-cell">値</div><div class="tlm-cell">値</div><div class="tlm-cell">値</div><div class="tlm-period">期間3</div><div class="tlm-cell">値</div><div class="tlm-cell">値</div><div class="tlm-cell">値</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>19</span></footer>
+    <div class="content"><div class="tlm" style="grid-template-columns: 1fr repeat(3, minmax(0, 1.4fr));"><div class="tlm-colhead">Phase</div><div class="tlm-colhead">Column Header 1</div><div class="tlm-colhead">Column Header 2</div><div class="tlm-colhead">Column Header 3</div><div class="tlm-period">Period 1</div><div class="tlm-cell">Value</div><div class="tlm-cell">Value</div><div class="tlm-cell">Value</div><div class="tlm-period">Period 2</div><div class="tlm-cell">Value</div><div class="tlm-cell">Value</div><div class="tlm-cell">Value</div><div class="tlm-period">Period 3</div><div class="tlm-cell">Value</div><div class="tlm-cell">Value</div><div class="tlm-cell">Value</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>19</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">19  theme_card_grid</div>
-    <h1 class="title">テーマカード</h1>
+    <h1 class="title">Theme Card Grid</h1>
     <div class="rule"></div>
-    <div class="content"><div class="metric-sub">指標名、単位、YYYY〜YYYY年</div><div class="theme-grid"><div class="theme-card"><div class="theme-band">ラベル1</div><div class="theme-title">タイトル 2</div><div class="theme-copy">Text 1</div><div class="theme-value">3.4x</div></div><div class="theme-card"><div class="theme-band">ラベル2</div><div class="theme-title">タイトル 3</div><div class="theme-copy">Text 2</div><div class="theme-value">+22%</div></div><div class="theme-card"><div class="theme-band">ラベル3</div><div class="theme-title">タイトル 4</div><div class="theme-copy">Text 3</div><div class="theme-value">-41%</div></div><div class="theme-card"><div class="theme-band">ラベル4</div><div class="theme-title">タイトル 5</div><div class="theme-copy">Text 4</div><div class="theme-value">92%</div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>20</span></footer>
+    <div class="content"><div class="metric-sub">Metric Name, Units, YYYY-YYYY</div><div class="theme-grid"><div class="theme-card"><div class="theme-band">Label 1</div><div class="theme-title">Title 2</div><div class="theme-copy">Text 1</div><div class="theme-value">3.4x</div></div><div class="theme-card"><div class="theme-band">Label 2</div><div class="theme-title">Title 3</div><div class="theme-copy">Text 2</div><div class="theme-value">+22%</div></div><div class="theme-card"><div class="theme-band">Label 3</div><div class="theme-title">Title 4</div><div class="theme-copy">Text 3</div><div class="theme-value">-41%</div></div><div class="theme-card"><div class="theme-band">Label 4</div><div class="theme-title">Title 5</div><div class="theme-copy">Text 4</div><div class="theme-value">92%</div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>20</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">20  recommendation_pillars</div>
-    <h1 class="title">提言の柱</h1>
+    <h1 class="title">Recommendation Pillars</h1>
     <div class="rule"></div>
-    <div class="content"><div class="pillars"><div class="pillar"><div class="pillar-num">1</div><div class="pillar-title">タイトル 2</div><div class="pillar-copy">Text 1</div><ul class="pillar-bullets"><li>Text 2</li><li>Text 3</li></ul></div><div class="pillar"><div class="pillar-num">2</div><div class="pillar-title">タイトル 3</div><div class="pillar-copy">Text 4</div><ul class="pillar-bullets"><li>Text 5</li><li>Text 6</li></ul></div><div class="pillar"><div class="pillar-num">3</div><div class="pillar-title">タイトル 4</div><div class="pillar-copy">Text 7</div><ul class="pillar-bullets"><li>Text 8</li><li>Text 9</li></ul></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>21</span></footer>
+    <div class="content"><div class="pillars"><div class="pillar"><div class="pillar-num">1</div><div class="pillar-title">Title 2</div><div class="pillar-copy">Text 1</div><ul class="pillar-bullets"><li>Text 2</li><li>Text 3</li></ul></div><div class="pillar"><div class="pillar-num">2</div><div class="pillar-title">Title 3</div><div class="pillar-copy">Text 4</div><ul class="pillar-bullets"><li>Text 5</li><li>Text 6</li></ul></div><div class="pillar"><div class="pillar-num">3</div><div class="pillar-title">Title 4</div><div class="pillar-copy">Text 7</div><ul class="pillar-bullets"><li>Text 8</li><li>Text 9</li></ul></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>21</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">21  numbered_imperatives</div>
-    <h1 class="title">番号つき打ち手</h1>
+    <h1 class="title">Numbered Strategic Imperatives</h1>
     <div class="rule"></div>
-    <div class="content"><div class="metric-sub">指標名、単位、YYYY〜YYYY年</div><div class="imps"><div class="imp"><div class="imp-num">1</div><div class="imp-rule"></div><div class="imp-title">タイトル 2</div><div class="imp-copy">Text 1</div></div><div class="imp"><div class="imp-num">2</div><div class="imp-rule"></div><div class="imp-title">タイトル 3</div><div class="imp-copy">Text 2</div></div><div class="imp"><div class="imp-num">3</div><div class="imp-rule"></div><div class="imp-title">タイトル 4</div><div class="imp-copy">Text 3</div></div><div class="imp"><div class="imp-num">4</div><div class="imp-rule"></div><div class="imp-title">タイトル 5</div><div class="imp-copy">Text 4</div></div><div class="imp"><div class="imp-num">5</div><div class="imp-rule"></div><div class="imp-title">タイトル 6</div><div class="imp-copy">Text 5</div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>22</span></footer>
+    <div class="content"><div class="metric-sub">Metric Name, Units, YYYY-YYYY</div><div class="imps"><div class="imp"><div class="imp-num">1</div><div class="imp-rule"></div><div class="imp-title">Title 2</div><div class="imp-copy">Text 1</div></div><div class="imp"><div class="imp-num">2</div><div class="imp-rule"></div><div class="imp-title">Title 3</div><div class="imp-copy">Text 2</div></div><div class="imp"><div class="imp-num">3</div><div class="imp-rule"></div><div class="imp-title">Title 4</div><div class="imp-copy">Text 3</div></div><div class="imp"><div class="imp-num">4</div><div class="imp-rule"></div><div class="imp-title">Title 5</div><div class="imp-copy">Text 4</div></div><div class="imp"><div class="imp-num">5</div><div class="imp-rule"></div><div class="imp-title">Title 6</div><div class="imp-copy">Text 5</div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>22</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">22  scr</div>
-    <h1 class="title">Situation・Complication・Resolution</h1>
+    <h1 class="title">Situation, Complication, Resolution</h1>
     <div class="rule"></div>
-    <div class="content"><div class="scr-grid"><div class="scr-col"><span class="scr-tag">Situation</span><h3 class="scr-heading">Text 1</h3><p class="scr-copy">Text 2</p><p class="scr-note">注：前提や注記を記載</p></div><div class="scr-col"><span class="scr-tag">Complication</span><h3 class="scr-heading">Text 3</h3><p class="scr-copy">Text 4</p><p class="scr-note">注：前提や注記を記載</p></div><div class="scr-col"><span class="scr-tag">Resolution</span><h3 class="scr-heading">Text 5</h3><p class="scr-copy">Text 6</p><p class="scr-note">注：前提や注記を記載</p></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>23</span></footer>
+    <div class="content"><div class="scr-grid"><div class="scr-col"><span class="scr-tag">Situation</span><h3 class="scr-heading">Text 1</h3><p class="scr-copy">Text 2</p><p class="scr-note">Note: Detail assumptions or notes</p></div><div class="scr-col"><span class="scr-tag">Complication</span><h3 class="scr-heading">Text 3</h3><p class="scr-copy">Text 4</p><p class="scr-note">Note: Detail assumptions or notes</p></div><div class="scr-col"><span class="scr-tag">Resolution</span><h3 class="scr-heading">Text 5</h3><p class="scr-copy">Text 6</p><p class="scr-note">Note: Detail assumptions or notes</p></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>23</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">23  issue_to_solution_map</div>
-    <h1 class="title">課題と打ち手の対応</h1>
+    <h1 class="title">Issue-to-Solution Mapping</h1>
     <div class="rule"></div>
-    <div class="content"><div class="ism"><div class="ism-col-label">課題</div><div></div><div class="ism-col-label solution">打ち手</div><div class="ism-row"><div class="ism-issue">Text 1</div><div class="ism-arrow"></div><div class="ism-solution"><div class="ism-solution-text">Text 2</div><div class="ism-impact">Text 3</div></div></div><div class="ism-row"><div class="ism-issue">Text 4</div><div class="ism-arrow"></div><div class="ism-solution"><div class="ism-solution-text">Text 5</div><div class="ism-impact">Text 6</div></div></div><div class="ism-row"><div class="ism-issue">Text 7</div><div class="ism-arrow"></div><div class="ism-solution"><div class="ism-solution-text">Text 8</div><div class="ism-impact">Text 9</div></div></div><div class="ism-mark" aria-hidden="true">&#9654;</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>24</span></footer>
+    <div class="content"><div class="ism"><div class="ism-col-label">Issue</div><div></div><div class="ism-col-label solution">Solution</div><div class="ism-row"><div class="ism-issue">Text 1</div><div class="ism-arrow"></div><div class="ism-solution"><div class="ism-solution-text">Text 2</div><div class="ism-impact">Text 3</div></div></div><div class="ism-row"><div class="ism-issue">Text 4</div><div class="ism-arrow"></div><div class="ism-solution"><div class="ism-solution-text">Text 5</div><div class="ism-impact">Text 6</div></div></div><div class="ism-row"><div class="ism-issue">Text 7</div><div class="ism-arrow"></div><div class="ism-solution"><div class="ism-solution-text">Text 8</div><div class="ism-impact">Text 9</div></div></div><div class="ism-mark" aria-hidden="true">&#9654;</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>24</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">24  issue_cause_solution</div>
-    <h1 class="title">課題→原因→解決</h1>
+    <h1 class="title">Issue -&gt; Root Cause -&gt; Solution</h1>
     <div class="rule"></div>
-    <div class="content"><div class="ics"><div class="ics-stage"><span class="ics-label">ラベル1</span><h3 class="ics-heading">Text 1</h3><p class="ics-copy">Text 2</p></div><div class="ics-arrow" aria-hidden="true">&#8594;</div><div class="ics-stage"><span class="ics-label">ラベル2</span><h3 class="ics-heading">Text 3</h3><p class="ics-copy">Text 4</p></div><div class="ics-arrow" aria-hidden="true">&#8594;</div><div class="ics-stage"><span class="ics-label">ラベル3</span><h3 class="ics-heading">Text 5</h3><p class="ics-copy">Text 6</p></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>25</span></footer>
+    <div class="content"><div class="ics"><div class="ics-stage"><span class="ics-label">Label 1</span><h3 class="ics-heading">Text 1</h3><p class="ics-copy">Text 2</p></div><div class="ics-arrow" aria-hidden="true">&#8594;</div><div class="ics-stage"><span class="ics-label">Label 2</span><h3 class="ics-heading">Text 3</h3><p class="ics-copy">Text 4</p></div><div class="ics-arrow" aria-hidden="true">&#8594;</div><div class="ics-stage"><span class="ics-label">Label 3</span><h3 class="ics-heading">Text 5</h3><p class="ics-copy">Text 6</p></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>25</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">25  issue_tree</div>
-    <h1 class="title">イシューツリー</h1>
+    <h1 class="title">Issue Tree</h1>
     <div class="rule"></div>
-    <div class="content"><div class="ltree"><div class="ltree-node"><div class="ltree-box ltree-l1 has-children">分解したいイシュー</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l2 has-children">サブイシュー1</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l3">論点1-1</div></div><div class="ltree-node"><div class="ltree-box ltree-l3">論点1-2</div></div></div></div><div class="ltree-node"><div class="ltree-box ltree-l2 has-children">サブイシュー2</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l3">論点2-1</div></div><div class="ltree-node"><div class="ltree-box ltree-l3">論点2-2</div></div></div></div><div class="ltree-node"><div class="ltree-box ltree-l2 has-children">サブイシュー3</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l3">論点3-1</div></div><div class="ltree-node"><div class="ltree-box ltree-l3">論点3-2</div></div></div></div></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>26</span></footer>
+    <div class="content"><div class="ltree"><div class="ltree-node"><div class="ltree-box ltree-l1 has-children">Core Issue to Deconstruct</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l2 has-children">Sub-Issue 1</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l3">Key Question 1-1</div></div><div class="ltree-node"><div class="ltree-box ltree-l3">Key Question 1-2</div></div></div></div><div class="ltree-node"><div class="ltree-box ltree-l2 has-children">Sub-Issue 2</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l3">Key Question 2-1</div></div><div class="ltree-node"><div class="ltree-box ltree-l3">Key Question 2-2</div></div></div></div><div class="ltree-node"><div class="ltree-box ltree-l2 has-children">Sub-Issue 3</div><div class="ltree-children"><div class="ltree-node"><div class="ltree-box ltree-l3">Key Question 3-1</div></div><div class="ltree-node"><div class="ltree-box ltree-l3">Key Question 3-2</div></div></div></div></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>26</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">26  current_target_state</div>
-    <h1 class="title">現状と目指す姿</h1>
+    <h1 class="title">Current vs. Target State</h1>
     <div class="rule"></div>
-    <div class="content"><div class="cts"><div class="cts-panel"><span class="cts-label">ラベル1</span><h3 class="cts-heading">Text 1</h3><ul class="cts-list"><li>Text 2</li><li>Text 3</li><li>Text 4</li></ul></div><div class="cts-arrow" aria-hidden="true">&#8250;</div><div class="cts-panel target"><span class="cts-label">ラベル2</span><h3 class="cts-heading">Text 5</h3><ul class="cts-list lettered"><li>Text 6</li><li>Text 7</li><li>Text 8</li></ul></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>27</span></footer>
+    <div class="content"><div class="cts"><div class="cts-panel"><span class="cts-label">Label 1</span><h3 class="cts-heading">Text 1</h3><ul class="cts-list"><li>Text 2</li><li>Text 3</li><li>Text 4</li></ul></div><div class="cts-arrow" aria-hidden="true">&#8250;</div><div class="cts-panel target"><span class="cts-label">Label 2</span><h3 class="cts-heading">Text 5</h3><ul class="cts-list lettered"><li>Text 6</li><li>Text 7</li><li>Text 8</li></ul></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>27</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">27  calc_flow</div>
-    <h1 class="title">計算ロジックの流れ</h1>
+    <h1 class="title">Calculation Logic Flow</h1>
     <div class="rule"></div>
-    <div class="content"><div class="chart-unit">指標名、単位</div><div class="cf"><div class="cf-panel"><div class="cf-panel-label">ラベル3</div><div class="cf-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 20px;">1</div></div><div class="stack-col-label">ラベル4</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 60px;">3</div></div><div class="stack-col-label">ラベル5</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">6</div></div><div class="stack-col-label">ラベル6</div></div></div></div><div class="cf-op" aria-hidden="true">&#215;</div><div class="cf-panel"><div class="cf-panel-label">ラベル7</div><div class="cf-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">2</div></div><div class="stack-col-label">ラベル8</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">2</div></div><div class="stack-col-label">ラベル9</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">2</div></div><div class="stack-col-label">ラベル10</div></div></div></div><div class="cf-op" aria-hidden="true">=</div><div class="cf-panel"><div class="cf-panel-label">ラベル11</div><div class="cf-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 19px;">1.5</div><div class="stack-seg s1" style="height: 6px;"></div></div><div class="stack-col-label">ラベル12</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 48px;">3.8</div><div class="stack-seg s1" style="height: 6px;"></div></div><div class="stack-col-label">ラベル15</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 114px;">9</div><div class="stack-seg s1" style="height: 6px;"></div></div><div class="stack-col-label">ラベル18</div></div></div></div></div><div class="stack-legend"><div class="legend-item"><span class="legend-swatch s0"></span>ラベル1</div><div class="legend-item"><span class="legend-swatch s1"></span>ラベル2</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>28</span></footer>
+    <div class="content"><div class="chart-unit">Metric Name, Units</div><div class="cf"><div class="cf-panel"><div class="cf-panel-label">Label 3</div><div class="cf-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 20px;">1</div></div><div class="stack-col-label">Label 4</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 60px;">3</div></div><div class="stack-col-label">Label 5</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">6</div></div><div class="stack-col-label">Label 6</div></div></div></div><div class="cf-op" aria-hidden="true">&#215;</div><div class="cf-panel"><div class="cf-panel-label">Label 7</div><div class="cf-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">2</div></div><div class="stack-col-label">Label 8</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">2</div></div><div class="stack-col-label">Label 9</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 120px;">2</div></div><div class="stack-col-label">Label 10</div></div></div></div><div class="cf-op" aria-hidden="true">=</div><div class="cf-panel"><div class="cf-panel-label">Label 11</div><div class="cf-chart"><div><div class="stack-col"><div class="stack-seg s0" style="height: 19px;">1.5</div><div class="stack-seg s1" style="height: 6px;"></div></div><div class="stack-col-label">Label 12</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 48px;">3.8</div><div class="stack-seg s1" style="height: 6px;"></div></div><div class="stack-col-label">Label 15</div></div><div><div class="stack-col"><div class="stack-seg s0" style="height: 114px;">9</div><div class="stack-seg s1" style="height: 6px;"></div></div><div class="stack-col-label">Label 18</div></div></div></div></div><div class="stack-legend"><div class="legend-item"><span class="legend-swatch s0"></span>Label 1</div><div class="legend-item"><span class="legend-swatch s1"></span>Label 2</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>28</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">28  process_flow</div>
-    <h1 class="title">プロセスの段階</h1>
+    <h1 class="title">Process Flow Stages</h1>
     <div class="rule"></div>
-    <div class="content"><div class="flow"><div class="flow-step"><div class="flow-num">1</div><h3 class="flow-title">タイトル 2</h3><p class="flow-copy">Text 1</p></div><div class="flow-arrow" aria-hidden="true"><span class="flow-arrow-mark">&#8250;</span></div><div class="flow-step"><div class="flow-num">2</div><h3 class="flow-title">タイトル 3</h3><p class="flow-copy">Text 2</p></div><div class="flow-arrow" aria-hidden="true"><span class="flow-arrow-mark">&#8250;</span></div><div class="flow-step"><div class="flow-num">3</div><h3 class="flow-title">タイトル 4</h3><p class="flow-copy">Text 3</p></div><div class="flow-arrow" aria-hidden="true"><span class="flow-arrow-mark">&#8250;</span></div><div class="flow-step"><div class="flow-num">4</div><h3 class="flow-title">タイトル 5</h3><p class="flow-copy">Text 4</p></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>29</span></footer>
+    <div class="content"><div class="flow"><div class="flow-step"><div class="flow-num">1</div><h3 class="flow-title">Title 2</h3><p class="flow-copy">Text 1</p></div><div class="flow-arrow" aria-hidden="true"><span class="flow-arrow-mark">&#8250;</span></div><div class="flow-step"><div class="flow-num">2</div><h3 class="flow-title">Title 3</h3><p class="flow-copy">Text 2</p></div><div class="flow-arrow" aria-hidden="true"><span class="flow-arrow-mark">&#8250;</span></div><div class="flow-step"><div class="flow-num">3</div><h3 class="flow-title">Title 4</h3><p class="flow-copy">Text 3</p></div><div class="flow-arrow" aria-hidden="true"><span class="flow-arrow-mark">&#8250;</span></div><div class="flow-step"><div class="flow-num">4</div><h3 class="flow-title">Title 5</h3><p class="flow-copy">Text 4</p></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>29</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">29  cycle</div>
-    <h1 class="title">循環サイクル</h1>
+    <h1 class="title">Closed-Loop Cycle</h1>
     <div class="rule"></div>
-    <div class="content"><div class="cycle"><div class="cycle-ring" aria-hidden="true"></div><div class="cycle-arrow-seg" style="left: 62.0%; top: 32.9%; transform: translate(-50%, -50%) rotate(36deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 69.5%; top: 56.5%; transform: translate(-50%, -50%) rotate(108deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 50.0%; top: 71.1%; transform: translate(-50%, -50%) rotate(180deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 30.5%; top: 56.5%; transform: translate(-50%, -50%) rotate(252deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 38.0%; top: 32.9%; transform: translate(-50%, -50%) rotate(324deg);" aria-hidden="true">&#8250;</div><div class="cycle-node" style="left: 50.0%; top: 16.0%;"><div class="flow-num">1</div><h3 class="flow-title">タイトル 2</h3><p class="flow-copy">Text 1</p></div><div class="cycle-node" style="left: 81.4%; top: 39.5%;"><div class="flow-num">2</div><h3 class="flow-title">タイトル 3</h3><p class="flow-copy">Text 2</p></div><div class="cycle-node" style="left: 69.4%; top: 77.5%;"><div class="flow-num">3</div><h3 class="flow-title">タイトル 4</h3><p class="flow-copy">Text 3</p></div><div class="cycle-node" style="left: 30.6%; top: 77.5%;"><div class="flow-num">4</div><h3 class="flow-title">タイトル 5</h3><p class="flow-copy">Text 4</p></div><div class="cycle-node" style="left: 18.6%; top: 39.5%;"><div class="flow-num">5</div><h3 class="flow-title">タイトル 6</h3><p class="flow-copy">Text 5</p></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>30</span></footer>
+    <div class="content"><div class="cycle"><div class="cycle-ring" aria-hidden="true"></div><div class="cycle-arrow-seg" style="left: 62.0%; top: 32.9%; transform: translate(-50%, -50%) rotate(36deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 69.5%; top: 56.5%; transform: translate(-50%, -50%) rotate(108deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 50.0%; top: 71.1%; transform: translate(-50%, -50%) rotate(180deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 30.5%; top: 56.5%; transform: translate(-50%, -50%) rotate(252deg);" aria-hidden="true">&#8250;</div><div class="cycle-arrow-seg" style="left: 38.0%; top: 32.9%; transform: translate(-50%, -50%) rotate(324deg);" aria-hidden="true">&#8250;</div><div class="cycle-node" style="left: 50.0%; top: 16.0%;"><div class="flow-num">1</div><h3 class="flow-title">Title 2</h3><p class="flow-copy">Text 1</p></div><div class="cycle-node" style="left: 81.4%; top: 39.5%;"><div class="flow-num">2</div><h3 class="flow-title">Title 3</h3><p class="flow-copy">Text 2</p></div><div class="cycle-node" style="left: 69.4%; top: 77.5%;"><div class="flow-num">3</div><h3 class="flow-title">Title 4</h3><p class="flow-copy">Text 3</p></div><div class="cycle-node" style="left: 30.6%; top: 77.5%;"><div class="flow-num">4</div><h3 class="flow-title">Title 5</h3><p class="flow-copy">Text 4</p></div><div class="cycle-node" style="left: 18.6%; top: 39.5%;"><div class="flow-num">5</div><h3 class="flow-title">Title 6</h3><p class="flow-copy">Text 5</p></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>30</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">30  chevron_rail</div>
-    <h1 class="title">矢羽の段階（全体像の見出し）</h1>
+    <h1 class="title">Chevron Rail Stages</h1>
     <div class="rule"></div>
-    <div class="content"><div class="chev-rail"><div class="chev first"><div class="chev-num">1</div><div class="chev-body"><div class="chev-title">タイトル 2</div><div class="chev-copy">Text 1</div></div></div><div class="chev"><div class="chev-num">2</div><div class="chev-body"><div class="chev-title">タイトル 3</div><div class="chev-copy">Text 2</div></div></div><div class="chev"><div class="chev-num">3</div><div class="chev-body"><div class="chev-title">タイトル 4</div><div class="chev-copy">Text 3</div></div></div><div class="chev"><div class="chev-num">4</div><div class="chev-body"><div class="chev-title">タイトル 5</div><div class="chev-copy">Text 4</div></div></div><div class="chev"><div class="chev-num">5</div><div class="chev-body"><div class="chev-title">タイトル 6</div><div class="chev-copy">Text 5</div></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>31</span></footer>
+    <div class="content"><div class="chev-rail"><div class="chev first"><div class="chev-num">1</div><div class="chev-body"><div class="chev-title">Title 2</div><div class="chev-copy">Text 1</div></div></div><div class="chev"><div class="chev-num">2</div><div class="chev-body"><div class="chev-title">Title 3</div><div class="chev-copy">Text 2</div></div></div><div class="chev"><div class="chev-num">3</div><div class="chev-body"><div class="chev-title">Title 4</div><div class="chev-copy">Text 3</div></div></div><div class="chev"><div class="chev-num">4</div><div class="chev-body"><div class="chev-title">Title 5</div><div class="chev-copy">Text 4</div></div></div><div class="chev"><div class="chev-num">5</div><div class="chev-body"><div class="chev-title">Title 6</div><div class="chev-copy">Text 5</div></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>31</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">31  chevron_value_chain</div>
-    <h1 class="title">バリューチェーン</h1>
+    <h1 class="title">Value Chain Chevrons</h1>
     <div class="rule"></div>
-    <div class="content"><div class="cvc" style="grid-template-columns:1fr repeat(7, 1.5fr);"><div class="cvc-lane" style="grid-row:1; grid-column:1;">ラベル1</div><div class="cvc-chev primary first" style="grid-row:1; grid-column:2;">ラベル2</div><div class="cvc-chev primary" style="grid-row:1; grid-column:3;">ラベル3</div><div class="cvc-chev primary" style="grid-row:1; grid-column:4;">ラベル4</div><div class="cvc-chev primary" style="grid-row:1; grid-column:5;">ラベル5</div><div class="cvc-chev primary" style="grid-row:1; grid-column:6;">ラベル6</div><div class="cvc-chev primary" style="grid-row:1; grid-column:7;">ラベル7</div><div class="cvc-chev primary" style="grid-row:1; grid-column:8;">ラベル8</div><div style="grid-row:2; grid-column:1;"></div><div class="cvc-desc" style="grid-row:2; grid-column:2;">Text 1</div><div class="cvc-desc" style="grid-row:2; grid-column:3;">Text 2</div><div class="cvc-desc" style="grid-row:2; grid-column:4;">Text 3</div><div class="cvc-desc" style="grid-row:2; grid-column:5;">Text 4</div><div class="cvc-desc" style="grid-row:2; grid-column:6;">Text 5</div><div class="cvc-desc" style="grid-row:2; grid-column:7;">Text 6</div><div class="cvc-desc" style="grid-row:2; grid-column:8;">Text 7</div><div class="cvc-lane" style="grid-row:3; grid-column:1;">ラベル9</div><div class="cvc-chev alt first" style="grid-row:3; grid-column:2;">ラベル10</div><div class="cvc-chev alt" style="grid-row:3; grid-column:3;">ラベル11</div><div class="cvc-chev alt" style="grid-row:3; grid-column:4;">ラベル12</div><div class="cvc-chev alt" style="grid-row:3; grid-column:5;">ラベル13</div><div class="cvc-chev alt" style="grid-row:3; grid-column:6;">ラベル14</div><div class="cvc-chev alt" style="grid-row:3; grid-column:7;">ラベル15</div><div class="cvc-chev alt" style="grid-row:3; grid-column:8;">ラベル16</div><div style="grid-row:4; grid-column:1;"></div><div class="cvc-desc" style="grid-row:4; grid-column:2;">Text 8</div><div class="cvc-desc" style="grid-row:4; grid-column:3;">Text 9</div><div class="cvc-desc" style="grid-row:4; grid-column:4;">Text 10</div><div class="cvc-desc" style="grid-row:4; grid-column:5;">Text 11</div><div class="cvc-desc" style="grid-row:4; grid-column:6;">Text 12</div><div class="cvc-desc" style="grid-row:4; grid-column:7;">Text 13</div><div class="cvc-desc" style="grid-row:4; grid-column:8;">Text 14</div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>32</span></footer>
+    <div class="content"><div class="cvc" style="grid-template-columns:1fr repeat(7, 1.5fr);"><div class="cvc-lane" style="grid-row:1; grid-column:1;">Label 1</div><div class="cvc-chev primary first" style="grid-row:1; grid-column:2;">Label 2</div><div class="cvc-chev primary" style="grid-row:1; grid-column:3;">Label 3</div><div class="cvc-chev primary" style="grid-row:1; grid-column:4;">Label 4</div><div class="cvc-chev primary" style="grid-row:1; grid-column:5;">Label 5</div><div class="cvc-chev primary" style="grid-row:1; grid-column:6;">Label 6</div><div class="cvc-chev primary" style="grid-row:1; grid-column:7;">Label 7</div><div class="cvc-chev primary" style="grid-row:1; grid-column:8;">Label 8</div><div style="grid-row:2; grid-column:1;"></div><div class="cvc-desc" style="grid-row:2; grid-column:2;">Text 1</div><div class="cvc-desc" style="grid-row:2; grid-column:3;">Text 2</div><div class="cvc-desc" style="grid-row:2; grid-column:4;">Text 3</div><div class="cvc-desc" style="grid-row:2; grid-column:5;">Text 4</div><div class="cvc-desc" style="grid-row:2; grid-column:6;">Text 5</div><div class="cvc-desc" style="grid-row:2; grid-column:7;">Text 6</div><div class="cvc-desc" style="grid-row:2; grid-column:8;">Text 7</div><div class="cvc-lane" style="grid-row:3; grid-column:1;">Label 9</div><div class="cvc-chev alt first" style="grid-row:3; grid-column:2;">Label 10</div><div class="cvc-chev alt" style="grid-row:3; grid-column:3;">Label 11</div><div class="cvc-chev alt" style="grid-row:3; grid-column:4;">Label 12</div><div class="cvc-chev alt" style="grid-row:3; grid-column:5;">Label 13</div><div class="cvc-chev alt" style="grid-row:3; grid-column:6;">Label 14</div><div class="cvc-chev alt" style="grid-row:3; grid-column:7;">Label 15</div><div class="cvc-chev alt" style="grid-row:3; grid-column:8;">Label 16</div><div style="grid-row:4; grid-column:1;"></div><div class="cvc-desc" style="grid-row:4; grid-column:2;">Text 8</div><div class="cvc-desc" style="grid-row:4; grid-column:3;">Text 9</div><div class="cvc-desc" style="grid-row:4; grid-column:4;">Text 10</div><div class="cvc-desc" style="grid-row:4; grid-column:5;">Text 11</div><div class="cvc-desc" style="grid-row:4; grid-column:6;">Text 12</div><div class="cvc-desc" style="grid-row:4; grid-column:7;">Text 13</div><div class="cvc-desc" style="grid-row:4; grid-column:8;">Text 14</div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>32</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">32  decision_fork</div>
-    <h1 class="title">分岐と判断</h1>
+    <h1 class="title">Decision Fork</h1>
     <div class="rule"></div>
-    <div class="content"><div class="fork"><div class="fork-q">問い 1：検討すべき問いを記載</div><div class="fork-branches"><div class="fork-branch"><h3 class="fork-branch-label">ラベル1</h3><p class="fork-branch-copy">Text 1</p><p class="fork-branch-outcome">Text 2</p></div><div class="fork-branch recommended"><h3 class="fork-branch-label">ラベル2</h3><p class="fork-branch-copy">Text 3</p><p class="fork-branch-outcome">Text 4</p></div><div class="fork-branch"><h3 class="fork-branch-label">ラベル3</h3><p class="fork-branch-copy">Text 5</p><p class="fork-branch-outcome">Text 6</p></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>33</span></footer>
+    <div class="content"><div class="fork"><div class="fork-q">Question 1: State the strategic question under consideration</div><div class="fork-branches"><div class="fork-branch"><h3 class="fork-branch-label">Label 1</h3><p class="fork-branch-copy">Text 1</p><p class="fork-branch-outcome">Text 2</p></div><div class="fork-branch recommended"><h3 class="fork-branch-label">Label 2</h3><p class="fork-branch-copy">Text 3</p><p class="fork-branch-outcome">Text 4</p></div><div class="fork-branch"><h3 class="fork-branch-label">Label 3</h3><p class="fork-branch-copy">Text 5</p><p class="fork-branch-outcome">Text 6</p></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>33</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">33  roadmap</div>
-    <h1 class="title">ロードマップ</h1>
+    <h1 class="title">Implementation Roadmap</h1>
     <div class="rule"></div>
-    <div class="content"><div class="roadmap"><div class="phase"><div class="phase-year">タイトル 2</div><div class="phase-copy">Text 1</div></div><div class="phase"><div class="phase-year">タイトル 3</div><div class="phase-copy">Text 2</div></div><div class="phase"><div class="phase-year">タイトル 4</div><div class="phase-copy">Text 3</div></div><div class="phase"><div class="phase-year">タイトル 5</div><div class="phase-copy">Text 4</div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>34</span></footer>
+    <div class="content"><div class="roadmap"><div class="phase"><div class="phase-year">Title 2</div><div class="phase-copy">Text 1</div></div><div class="phase"><div class="phase-year">Title 3</div><div class="phase-copy">Text 2</div></div><div class="phase"><div class="phase-year">Title 4</div><div class="phase-copy">Text 3</div></div><div class="phase"><div class="phase-year">Title 5</div><div class="phase-copy">Text 4</div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>34</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">34  gantt</div>
-    <h1 class="title">ガントチャート</h1>
+    <h1 class="title">Gantt Chart</h1>
     <div class="rule"></div>
-    <div class="content"><div class="gantt2"><div class="g2-corner" style="grid-row:1; grid-column:1/3;"></div><div class="g2-bandrow" style="grid-row:1; grid-column:3; grid-template-columns: repeat(12, 1fr);"><div class="g2-band" style="grid-column: span 9;">ラベル13</div><div class="g2-band" style="grid-column: span 3;">ラベル14</div></div><div class="g2-corner" style="grid-row:2; grid-column:1/3;"></div><div class="g2-monthrow" style="grid-row:2; grid-column:3; grid-template-columns: repeat(12, 1fr);"><div class="g2-month">ラベル1</div><div class="g2-month">ラベル2</div><div class="g2-month">ラベル3</div><div class="g2-month">ラベル4</div><div class="g2-month">ラベル5</div><div class="g2-month">ラベル6</div><div class="g2-month">ラベル7</div><div class="g2-month">ラベル8</div><div class="g2-month">ラベル9</div><div class="g2-month">ラベル10</div><div class="g2-month">ラベル11</div><div class="g2-month">ラベル12</div></div><div class="g2-corner g2-mscorner" style="grid-row:3; grid-column:1/3;">マイルストーン</div><div class="g2-msrow" style="grid-row:3; grid-column:3;"><div class="g2-ms" style="left:4.17%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">ラベル15</div></div><div class="g2-ms" style="left:20.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">ラベル16</div></div><div class="g2-ms" style="left:45.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">ラベル17</div></div><div class="g2-ms" style="left:70.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">ラベル18</div></div><div class="g2-ms" style="left:95.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">ラベル19</div></div></div><div class="g2-group" style="grid-row:4 / span 1; grid-column:1;">ラベル20</div><div class="g2-rowlabel" style="grid-row:4; grid-column:2;">ラベル21</div><div class="g2-track" style="grid-row:4; grid-column:3; --gcols:12;"><div class="g2-bar plan" style="left:0%; width:8.333333333333332%;"></div></div><div class="g2-group" style="grid-row:5 / span 1; grid-column:1;">ラベル22</div><div class="g2-rowlabel" style="grid-row:5; grid-column:2;">ラベル23</div><div class="g2-track" style="grid-row:5; grid-column:3; --gcols:12;"><div class="g2-bar plan" style="left:8.333333333333332%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:6 / span 1; grid-column:1;">ラベル24</div><div class="g2-rowlabel" style="grid-row:6; grid-column:2;">ラベル25</div><div class="g2-track" style="grid-row:6; grid-column:3; --gcols:12;"><div class="g2-bar build" style="left:16.666666666666664%; width:8.333333333333332%;"></div></div><div class="g2-group" style="grid-row:7 / span 1; grid-column:1;">ラベル26</div><div class="g2-rowlabel" style="grid-row:7; grid-column:2;">ラベル27</div><div class="g2-track" style="grid-row:7; grid-column:3; --gcols:12;"><div class="g2-bar build" style="left:25%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:8 / span 1; grid-column:1;">ラベル28</div><div class="g2-rowlabel" style="grid-row:8; grid-column:2;">ラベル29</div><div class="g2-track" style="grid-row:8; grid-column:3; --gcols:12;"><div class="g2-bar build" style="left:33.33333333333333%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:9 / span 1; grid-column:1;">ラベル30</div><div class="g2-rowlabel" style="grid-row:9; grid-column:2;">ラベル31</div><div class="g2-track" style="grid-row:9; grid-column:3; --gcols:12;"><div class="g2-bar scale" style="left:66.66666666666666%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:10 / span 1; grid-column:1;">ラベル32</div><div class="g2-rowlabel" style="grid-row:10; grid-column:2;">ラベル33</div><div class="g2-track" style="grid-row:10; grid-column:3; --gcols:12;"><div class="g2-bar scale ongoing" style="left:83.33333333333334%; width:16.666666666666664%;"></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>35</span></footer>
+    <div class="content"><div class="gantt2"><div class="g2-corner" style="grid-row:1; grid-column:1/3;"></div><div class="g2-bandrow" style="grid-row:1; grid-column:3; grid-template-columns: repeat(12, 1fr);"><div class="g2-band" style="grid-column: span 9;">Label 13</div><div class="g2-band" style="grid-column: span 3;">Label 14</div></div><div class="g2-corner" style="grid-row:2; grid-column:1/3;"></div><div class="g2-monthrow" style="grid-row:2; grid-column:3; grid-template-columns: repeat(12, 1fr);"><div class="g2-month">Label 1</div><div class="g2-month">Label 2</div><div class="g2-month">Label 3</div><div class="g2-month">Label 4</div><div class="g2-month">Label 5</div><div class="g2-month">Label 6</div><div class="g2-month">Label 7</div><div class="g2-month">Label 8</div><div class="g2-month">Label 9</div><div class="g2-month">Label 10</div><div class="g2-month">Label 11</div><div class="g2-month">Label 12</div></div><div class="g2-corner g2-mscorner" style="grid-row:3; grid-column:1/3;">Milestones</div><div class="g2-msrow" style="grid-row:3; grid-column:3;"><div class="g2-ms" style="left:4.17%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">Label 15</div></div><div class="g2-ms" style="left:20.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">Label 16</div></div><div class="g2-ms" style="left:45.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">Label 17</div></div><div class="g2-ms" style="left:70.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">Label 18</div></div><div class="g2-ms" style="left:95.83%;"><div class="g2-diamond" aria-hidden="true">&#9650;</div><div class="g2-mslab">Label 19</div></div></div><div class="g2-group" style="grid-row:4 / span 1; grid-column:1;">Label 20</div><div class="g2-rowlabel" style="grid-row:4; grid-column:2;">Label 21</div><div class="g2-track" style="grid-row:4; grid-column:3; --gcols:12;"><div class="g2-bar plan" style="left:0%; width:8.333333333333332%;"></div></div><div class="g2-group" style="grid-row:5 / span 1; grid-column:1;">Label 22</div><div class="g2-rowlabel" style="grid-row:5; grid-column:2;">Label 23</div><div class="g2-track" style="grid-row:5; grid-column:3; --gcols:12;"><div class="g2-bar plan" style="left:8.333333333333332%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:6 / span 1; grid-column:1;">Label 24</div><div class="g2-rowlabel" style="grid-row:6; grid-column:2;">Label 25</div><div class="g2-track" style="grid-row:6; grid-column:3; --gcols:12;"><div class="g2-bar build" style="left:16.666666666666664%; width:8.333333333333332%;"></div></div><div class="g2-group" style="grid-row:7 / span 1; grid-column:1;">Label 26</div><div class="g2-rowlabel" style="grid-row:7; grid-column:2;">Label 27</div><div class="g2-track" style="grid-row:7; grid-column:3; --gcols:12;"><div class="g2-bar build" style="left:25%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:8 / span 1; grid-column:1;">Label 28</div><div class="g2-rowlabel" style="grid-row:8; grid-column:2;">Label 29</div><div class="g2-track" style="grid-row:8; grid-column:3; --gcols:12;"><div class="g2-bar build" style="left:33.33333333333333%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:9 / span 1; grid-column:1;">Label 30</div><div class="g2-rowlabel" style="grid-row:9; grid-column:2;">Label 31</div><div class="g2-track" style="grid-row:9; grid-column:3; --gcols:12;"><div class="g2-bar scale" style="left:66.66666666666666%; width:16.666666666666664%;"></div></div><div class="g2-group" style="grid-row:10 / span 1; grid-column:1;">Label 32</div><div class="g2-rowlabel" style="grid-row:10; grid-column:2;">Label 33</div><div class="g2-track" style="grid-row:10; grid-column:3; --gcols:12;"><div class="g2-bar scale ongoing" style="left:83.33333333333334%; width:16.666666666666664%;"></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>35</span></footer>
   </div>
 </section>
 
 <section class="slide slide--no-title-rule">
   <div class="sinner">
     <div class="kicker">35  decision_page</div>
-    <h1 class="title">意思決定ページ</h1>
+    <h1 class="title">Executive Decision Page</h1>
     <div class="rule"></div>
-    <div class="content"><div class="decision-layout"><div class="decision-ask"><div class="decision-ask-title">推奨する意思決定</div><div class="decision-ask-copy">Text 1</div></div><div class="decision-list"><div class="decision-item"><div class="decision-num">1</div><div>Text 2</div></div><div class="decision-item"><div class="decision-num">2</div><div>Text 3</div></div><div class="decision-item"><div class="decision-num">3</div><div>Text 4</div></div></div></div></div>
-    <footer class="footer"><span class="source">出典：Source 1</span><span>36</span></footer>
+    <div class="content"><div class="decision-layout"><div class="decision-ask"><div class="decision-ask-title">Recommended Decision</div><div class="decision-ask-copy">Text 1</div></div><div class="decision-list"><div class="decision-item"><div class="decision-num">1</div><div>Text 2</div></div><div class="decision-item"><div class="decision-num">2</div><div>Text 3</div></div><div class="decision-item"><div class="decision-num">3</div><div>Text 4</div></div></div></div></div>
+    <footer class="footer"><span class="source">Source: Source 1</span><span>36</span></footer>
   </div>
 </section>
 </main>

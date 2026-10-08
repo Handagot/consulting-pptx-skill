@@ -1,7 +1,7 @@
-"""機械チェックの自己テスト（標準ライブラリのみ）。
+"""Self-test for automated mechanical checks (standard library only).
 
-指摘を機械チェックに足したら、ここに「直していない版で FAIL が出る」「直した版で出ない」の
-両方を1件ずつ足す。直していない版で発火しないチェックは、測れていないのと同じ。
+When adding a check, add both a case where uncorrected versions trigger FAIL and a case where corrected versions pass.
+A check that does not fire on uncorrected input is equivalent to an unmeasured check.
 
   python3 -m unittest discover -s tests
 """
@@ -24,7 +24,7 @@ def run(html, *extra):
         extra = [str(Path(d) / a[1:]) if a.startswith("@") else a for a in extra]
         for a in extra:
             if a.endswith(".txt"):
-                Path(a).write_text("# 架空の禁止語\nサンプル商事\nre:PJ-\\d{3}\n", encoding="utf8")
+                Path(a).write_text("# Fictitious forbidden terms\nサンプル商事\nre:PJ-\\d{3}\n", encoding="utf8")
         r = subprocess.run([sys.executable, str(CHECK), str(p), *extra], capture_output=True, text=True)
     return r.returncode, [l for l in r.stdout.splitlines() if l.startswith("FAIL")]
 
@@ -92,7 +92,7 @@ def run_warns(html):
 
 
 class NumberConsistency(unittest.TestCase):
-    """slide-rules §7.6 数値の平仄: 同じ指標がページ間で違う値なら WARN。"""
+    """slide-rules §7.6 Numerical consistency: WARN if the same metric has divergent values across pages."""
 
     def deck(self, p2, p5):
         return inject("承認待ちは平均3日", p2).replace("営業部", p5, 1)
@@ -102,11 +102,11 @@ class NumberConsistency(unittest.TestCase):
         self.assertTrue(any("数値の平仄疑い" in w and "承認者数" in w for w in warns), warns)
 
     def test_same_value_in_other_notation_passes(self):
-        warns = run_warns(self.deck("承認者数は1.2万人", "承認者数 12,000人"))   # 桁の書き方が違っても値が同じなら可
+        warns = run_warns(self.deck("承認者数は1.2万人", "承認者数 12,000人"))   # Permissible if values are identical despite notation differences
         self.assertFalse(any("数値の平仄疑い" in w for w in warns), warns)
 
     def test_amount_with_scale_fires(self):
-        warns = run_warns(self.deck("売上高は120億円", "売上高 118億円"))   # 金額・割合など単位を問わず比べる
+        warns = run_warns(self.deck("売上高は120億円", "売上高 118億円"))   # Compares values regardless of units (amounts, percentages, etc.)
         self.assertTrue(any("数値の平仄疑い" in w and "売上高" in w for w in warns), warns)
 
     def test_same_amount_in_other_scale_passes(self):
@@ -114,11 +114,11 @@ class NumberConsistency(unittest.TestCase):
         self.assertFalse(any("数値の平仄疑い" in w for w in warns), warns)
 
     def test_float_rounding_does_not_fire(self):
-        warns = run_warns(self.deck("売上高は1.1億円", "売上高 110,000,000円"))   # 1.1×1e8 の float 誤差を食い違いにしない
+        warns = run_warns(self.deck("売上高は1.1億円", "売上高 110,000,000円"))   # Avoid flagging 1.1e8 float inaccuracy as discrepancy
         self.assertFalse(any("数値の平仄疑い" in w for w in warns), warns)
 
     def test_different_year_passes(self):
-        warns = run_warns(self.deck("2024年の承認者数は12人", "2026年の承認者数は15人"))   # 時点が違えば別の指標
+        warns = run_warns(self.deck("2024年の承認者数は12人", "2026年の承認者数は15人"))   # Different time horizons represent distinct metrics
         self.assertFalse(any("数値の平仄疑い" in w for w in warns), warns)
 
 
@@ -174,7 +174,7 @@ class TitleConnector(unittest.TestCase):
 
 
 class ProductionMeta(unittest.TestCase):
-    """SKILL.md「本スキル使用の注釈」: ツール名は最終ページ（裏表紙）の出典行だけ。他ページは FAIL。"""
+    """SKILL.md attribution guidelines: Tool attribution allowed only on final back cover page source line. Other pages FAIL."""
     BODY = "承認待ちは平均3日"
 
     def test_tool_name_on_content_page_fails(self):
@@ -182,7 +182,7 @@ class ProductionMeta(unittest.TestCase):
         self.assertTrue(any("制作メタ" in f for f in fails), fails)
 
     def test_tool_name_on_back_cover_passes(self):
-        code, fails = run(GOOD)   # fixture の裏表紙には出典行に注釈が入っている
+        code, fails = run(GOOD)   # Fixture back cover includes attribution in source line
         self.assertFalse(any("制作メタ" in f for f in fails), fails)
 
     def test_credit_sentence_on_content_page_only_warns(self):
@@ -191,7 +191,7 @@ class ProductionMeta(unittest.TestCase):
         self.assertTrue(any("で作成" in w for w in warns(html)))
 
     def test_disclaimer_with_de_sakusei_does_not_fail(self):
-        code, fails = run(inject(self.BODY, self.BODY + "<p>本資料は2026年9月時点の公開情報で作成</p>"))   # 免責文は制作メタではない
+        code, fails = run(inject(self.BODY, self.BODY + "<p>本資料は2026年9月時点の公開情報で作成</p>"))   # Disclaimers are not production metadata
         self.assertFalse(any("制作メタ" in f for f in fails), fails)
 
     def test_github_url_as_source_only_warns(self):
@@ -203,7 +203,7 @@ def _has_playwright():
     return (ROOT / "node_modules" / "playwright").exists()
 
 
-@unittest.skipUnless(_has_playwright(), "npm run setup で playwright を入れると実行される")
+@unittest.skipUnless(_has_playwright(), "Executed when playwright is installed via npm run setup")
 class EmptyArea(unittest.TestCase):
     def layout(self, html):
         with tempfile.TemporaryDirectory() as d:
@@ -226,12 +226,8 @@ class EmptyArea(unittest.TestCase):
         self.assertIn("p3: 版面の", out)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class DashAndHeads(unittest.TestCase):
-    """§6 非該当「—」は連結ではない／§4.49 基本パーツ集のカラム見出し .colh も対象"""
+    """§6 '—' for not applicable is not concatenation / §4.49 Column header .colh in base parts is also covered"""
     def test_label_dash_join_warns(self):
         w = warns(inject("承認待ちは平均3日", "承認待ち — 平均3日"))
         self.assertTrue(any("ダッシュ" in l for l in w), w)
@@ -246,7 +242,7 @@ class DashAndHeads(unittest.TestCase):
 
 
 class HarveyAndSummary(unittest.TestCase):
-    """¾ハーベイボールの中心点抜け（FAIL）／エグゼクティブサマリーの羅列（WARN）"""
+    """¾ Harvey ball missing center point (FAIL) / Executive summary bullet dump (WARN)"""
     BAD_Q3 = "<style>.hb.q3 i{clip-path:polygon(50% 0,100% 0,100% 100%,0 100%,0 50%)}</style>"
     GOOD_Q3 = "<style>.hb.q3 i{clip-path:polygon(50% 50%,50% 0,100% 0,100% 100%,0 100%,0 50%)}</style>"
 
@@ -280,9 +276,9 @@ def _has_pptx():
         return False
 
 
-@unittest.skipUnless(_has_pptx(), "python-pptx が入っていると実行される")
+@unittest.skipUnless(_has_pptx(), "Executed when python-pptx is installed")
 class PptxLayout(unittest.TestCase):
-    """check_deck_layout.py: 図形に隠れた文字・中身の無い箱（線は箱と取り違えない）"""
+    """check_deck_layout.py: Text hidden behind shapes and empty boxes (do not confuse lines with boxes)"""
 
     def _deck(self, build):
         from pptx import Presentation
@@ -324,3 +320,7 @@ class PptxLayout(unittest.TestCase):
         def build(s, In, M):
             self._solid(s.shapes.add_shape(M.RECTANGLE, In(1), In(1), In(2), In(1)))
         self.assertIn("empty", self._deck(build))
+
+
+if __name__ == "__main__":
+    unittest.main()

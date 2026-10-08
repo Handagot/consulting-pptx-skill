@@ -1,16 +1,16 @@
-# local/ — 自分の組織用の規約・テンプレを置く場所（git 管理外）
+# local/ — Directory for Organization-Specific Rules and Templates (Untracked in Git)
 
-このフォルダの中身は `local/README.md` 以外 `.gitignore` されている。`git pull` で本体を更新しても、ここに置いたものは上書きされない。
+Everything in this folder except `local/README.md` is ignored by git (`.gitignore`). When updating upstream via `git pull`, files placed here will never be overwritten.
 
-| ファイル | 役割 | 読まれ方 |
+| File | Purpose | How It Is Used |
 |---|---|---|
-| `slide-rules.local.md` | 自組織の規約（本体 `references/slide-rules.md` への追加・上書き） | スキルは本体の規約を読んだ後にこれを読む。両方に当たる規則はこちらが優先 |
-| `forbid.txt` | 外に出してはいけない語（顧客名・案件コードなど。1 行 1 語、`re:` で正規表現） | `python3 scripts/check_deck.py deck.html --forbid local/forbid.txt` |
-| `templates/` | 自組織のパーツ集・スキン・差し込み先の資料（`.pptx` / `.potx`）と `skin.json` | 本体の `templates/` の代わりに、または加えて使う |
-| `examples/` | 自組織で作った参考デッキ | 似た資料を作るときの手本 |
+| `slide-rules.local.md` | Organization-specific rules (extensions and overrides to `references/slide-rules.md`) | The skill reads core rules first, then loads this file. Overlapping rules take precedence from here. |
+| `forbid.txt` | Confidential terms that must never appear externally (client names, deal codes, etc.; 1 term per line, `re:` for regex) | `python3 scripts/check_deck.py deck.html --forbid local/forbid.txt` |
+| `templates/` | Custom component libraries, skins, destination house decks (`.pptx` / `.potx`), and `skin.json` | Used in place of or in addition to core `templates/` |
+| `examples/` | Reference decks created within your organization | Blueprints when authoring similar presentations |
 
-## 書き方の目安
+## Writing Guidelines
 
-- `slide-rules.local.md` は本体と同じ書式（節番号は `L1`, `L2`, … のように本体とぶつからない接頭辞を付ける）。「なぜ」を 1 行添えると、次に読む人（と AI）が規則を外さない
-- 本体の規約と矛盾する規則は、矛盾する本体の節番号を書く（例「§7.3 の代わりに、当社ではブレットは『・』」）
-- **汎用化できる規則はここに溜めず、本体への PR にする**（出し方は `CONTRIBUTING.md`）。顧客名・案件固有の値を含む規則だけをここに残す
+- Format `slide-rules.local.md` in the same structure as the core rules (use prefixes like `L1`, `L2`, ... for section numbers to avoid collisions with core numbering). Adding a 1-line "why" rationale ensures future readers (and AI agents) understand the boundary.
+- For rules that intentionally conflict with core rules, reference the conflicting core section number (e.g., "Instead of §7.3, our company uses standard square bullets for level 1").
+- **Do not hoard generalizable rules here; contribute them upstream via Pull Request** (see `CONTRIBUTING.md`). Keep only rules containing client names, deal-specific values, or company-proprietary policies in `local/`.

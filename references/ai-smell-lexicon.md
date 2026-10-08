@@ -1,64 +1,74 @@
-# AI臭ワード・言い回し集（文章のAIくささを消す）
+# AI Smell & Slop Lexicon (Eliminating Artificial AI Tone)
 
-スライド・メール・Slack・納品文書に共通の「AIが書いた感」— 業界で言う **AI slop（スロップ: AI特有の冗長で薄い量産文体）** — を消すための正本。
-出典: 実務レビューで実際に「AIくさい」と直された一次指摘＋AIっぽい日本語の一般マーカーの統合。
-slide-rules.md §7.9 から参照される。**作成後、納品前に本ファイルの語彙スキャンと30秒セルフチェックをかける。**
+A canonical guide for stripping presentation decks, emails, and consulting deliverables of "AI smell"—the industry phenomenon known as **AI slop: verbose, diluted, mass-produced writing characteristic of LLMs**.
 
-## 0. 実際にレビューで直された核
+Source: Consolidated from real-world executive review pushback where drafts were flagged as "sounding like AI", synthesized with linguistic markers of AI-generated text. Referenced directly by `slide-rules.md §7.9`. **Scan your vocabulary against this file and perform the 30-second self-check before final delivery.**
 
-- **冗長。まず削る（目安400字）** — 「長すぎるから400字で整理して」
-- **過剰に懇切丁寧＝「AIが考えた猿でもわかる文章」** — 全部を丁寧に言い換える冗長さが即バレる（「猿でもわかるように」自体は良い意味でも使うので、NGは言葉でなく冗長さ）
-- **回りくどい・ストレートじゃない** — 遠回し・修飾過多をやめ直球で
-- **判で押した定型文ループ** — 「記録しました」を何度も繰り返すなど、同じ定型応答の反復
-- **装飾で盛るのがAI臭** — 信号機の赤/緑/黄の表、絵文字アイコン見出し
+---
 
-## 1. 単語・言い回し（消す）
+## 0. Core Lessons from Real Executive Reviews
 
-- 空虚な強調: まさに／いわば／非常に／極めて／大変／圧倒的に／画期的／革新的／次世代の／〜と言っても過言ではない／〜に他なりません
-- カタカナ盛り: ソリューション／シナジー／シームレス／エンドツーエンド／コミット／ブラッシュアップ／バリュー／インサイト／付加価値
-- 名詞句化ビジネス語: 最適化／効率化／活用／推進／加速／強化／担保／寄与／実現／創出／〜に資する → 素の動詞に戻す（活用して→使って、実現します→できます）
-- 自己美化・スローガン: 寄り添い／伴走し／二人三脚で／尽力してまいります／邁進／さらなる高みへ／〜な世界を目指します
-- 定型の枕: この度は／平素より／昨今／近年／変化の激しい時代／現代において／まず結論から申し上げますと／以下の通りです
-- 過剰敬語: 〜させていただきます の乱用／〜いただけますと幸いです の連発／恐れ入りますが を毎文
-- 抽象の水増し: 〜という点において／〜の観点から／〜に関しまして／〜な側面／〜のフェーズ／重要なポイント／鍵となる／肝となる
+- **Excessive Length. Cut ruthlessly** — "This is far too long; condense it to the core essence."
+- **Condescending Over-Explanation** — Painstakingly spelling out obvious concepts or restating the prompt instantly exposes AI authorship.
+- **Roundabout, Indirect Phrasing** — Excessive hedging and layers of modification disguise the point. State conclusions directly.
+- **Repetitive Template Loops** — Repeating the exact same canned structure or acknowledging phrases across consecutive sections.
+- **Superficial Decorative Bloat** — Traffic-light colored tables (red/yellow/green everywhere), emoji icons in headings, and decorative badges.
 
-## 2. 構文・文法（崩す）
+---
 
-- 機械的テンプレ: 「結論→理由→まとめ」の三段固定／「ポイントは3つあります」フレーム／「まず・次に・最後に」のナンバリング説明
-- 報告書調: 何でも見出し＋太字＋番号リスト＋絵文字アイコン
-- 回りくどさ: 一文が長く主語と述語が遠い／「〜することが可能です」（→できます）／「〜になります」の誤用（こちらが資料になります）
-- 三点セット・対句の連打: 「〜し、〜し、〜する」／体言止め対句／「AだけでなくBも、さらにCも」
-- 接続詞過多: また／さらに／加えて／したがって／そのため／このように を毎文頭（8割消せる）
-- 翻訳調: 受動態多用・主語の毎回明示・英語直訳語順
-- 断定回避: 「〜と言えるでしょう」「〜と考えられます」の連発
-- 受け身・名詞化しすぎ: 「〜の改善が図られる」→「〜を改善する」
-- 思考の枠組みの名前の露出: Situation／Complication／Resolution、Issue／Resolution を見出しに出す → 「これまでの流れ／課題／対策」のように中身の言葉にする（slide-rules §7.32）
-- ダッシュ連結: 補足や言い換えを「 — 」で繋ぐ文体の多用 → 句点で切る／「：」／括弧に置き換える
+## 1. Words and Phrases to Eliminate
 
-## 3. トーン・締め（尻尾を消す）
+- **Empty Intensifiers**: *Truly*, *fundamentally*, *vastly*, *groundbreaking*, *revolutionary*, *next-generation*, *unprecedented*, *game-changing*, *it goes without saying that...*, *serves as nothing less than...*
+- **Buzzword Overload**: *Synergy*, *seamless*, *end-to-end*, *holistic*, *paradigm*, *deep dive*, *value-add*, *actionable insights*, *leverage*, *streamline*.
+- **Bloated Nominalizations**: *Optimization*, *efficiency enhancement*, *acceleration*, *maximization*, *utilization*, *foster*, *drive* → Replace with plain, active verbs (*improve*, *speed up*, *use*, *build*).
+- **Corporate Sloganizing**: *Partnering hand-in-hand*, *walking alongside*, *striving tirelessly*, *reaching new heights*, *shaping the future of...*
+- **Throat-Clearing Intros**: *In today's fast-paced world...*, *In recent years...*, *In the current business landscape...*, *As outlined below...*, *First and foremost...*
+- **Excessive Hedging**: *It could be said that...*, *May be considered as...*, *Appears to potentially indicate...* → State facts directly.
+- **Abstract Padding**: *From the perspective of...*, *In terms of...*, *Regarding the aspect of...*, *Key considerations around...* → Delete and connect the sentence directly.
 
-- 先送りの決まり文句: 詳細は別途ご説明いたします／追ってご連絡いたします／今後検討してまいります／詳細は後日 → 中身を書くか、いつ誰が何を出すかを書く。書けないなら行ごと消す（check_deck が WARN）
-- 定型締め: ご確認のほどよろしくお願いいたします／引き続きどうぞよろしく／ご不明な点がございましたらお気軽に／いかがでしたでしょうか／ぜひご検討ください
-- 空虚な相槌・追従: 素晴らしいですね／おっしゃる通りです／鋭いご指摘です／さすがです／大変参考になります（＝最初から正しく出せ）
-- 装飾記号: 絵文字・記号の見出し装飾（✉🔒✅📋⚠👉▪）／信号機3色の表／太字の乱用
-- 揺れのなさ: 感嘆符ゼロ or 機械的な毎文「！」／ヘッジ（〜かなと・〜っぽい）が一切ない完璧な断定
-- 誇張・水増し: 「データが来れば何とかなる」式の楽観／綺麗にまとめすぎ・優等生的で体温がない
+---
 
-## 4. 情報設計
+## 2. Syntax and Structure to Break
 
-- 冗長・網羅癖: 全部MECEに割って全部盛る／前置きや免責が本文より長い／要点を絞らず箇条書きで盛る → まず削る（目安400字）
-- 逆側の正解（人の書き方）: 短い・1文=1行・要点だけ／正直に言い切る／数字・日付・選択肢を具体に出す／たまに「！」で温度を上げる
+- **Mechanical Framework Formulae**: Rigid three-part structures (Conclusion → Reason → Summary) repeated on every slide; "Here are 3 key pillars" templates; "First... Second... Finally..." numbering on trivial lists.
+- **Generic Report Tone**: Bullet lists where every bullet has an artificial bolded label followed by run-on text, preceded by emoji icons.
+- **Roundabout Passive Voice**: *Improvements were realized through the implementation of...* → *Implementing [X] improved [Y]*.
+- **Rhythmic Triplets**: The compulsive urge to list exactly three parallel clauses (*streamline X, enhance Y, and optimize Z*).
+- **Connector Overuse**: Beginning nearly every sentence with *Furthermore*, *In addition*, *Moreover*, *Therefore*, *Thus*, *Consequently*, or *Accordingly* (80% of these can be deleted outright).
+- **Dash-Joined Pseudo-Structure**: Overusing ` — ` em-dashes to glue disparate clauses and explanations (*Label — Detailed explanation* repeated on every line) → Replace with periods, colons, or proper indentation.
+- **Exposing Internal Thinking Frameworks**: Displaying theoretical labels like *Situation*, *Complication*, *Resolution* or *Issue / Countermeasure* directly on client slides → Use plain, business-grounded terms like *Context*, *Current Bottlenecks*, *Recommended Actions* (slide-rules §7.32).
 
-## 5. 30秒セルフチェック（納品・送信前）
+---
 
-1. 削れる語（強調・接続詞・枕・定型締め）を消したか
-2. 記号・絵文字・太字装飾を撤去したか
-3. 口語を1〜2箇所混ぜたか（完璧すぎる敬体で揺れゼロになっていないか）
-4. 声に出して「自分が言う言葉」か
-5. 長ければ400字目安で削ったか
+## 3. Tone and Closings: Pruning the AI "Tail"
 
-## 運用
+- **Deferred Action Stock Phrases**: *Details will be provided separately*, *We will examine this in due course*, *Further exploration will occur at a later stage* → State the concrete details, name the specific owner and timeline, or delete the line entirely (triggers WARN in `check_deck.py`).
+- **Canned Sycophantic Sign-offs**: *We hope this proposal meets your expectations*, *Please let us know if you have any questions*, *We look forward to embarking on this transformative journey together*.
+- **Unearned Flattery in Chat**: *Great question!*, *Spot-on observation!*, *You make an excellent point!* → Address the inquiry directly with precision.
+- **Decorative Clutter**: Emojis and decorative symbols in slide headings (✉, 🔒, ✅, 📋, ⚠️, 👉, ▪).
+- **Lifeless Perfection**: Devoid of real trade-offs, human voice, or concrete edge cases; overly neat, optimistic, and sterile.
 
-- スライド: slide-rules.md §7.9 として適用。check_deck.py の AI臭ワード検査（WARN）が高確度語を検出する
-- **slide-rules との棲み分け**: スライドでなくメールでも同じ指摘になるものはここ（言葉の癖）。スライドという器に固有の指摘（レイアウト・表・タイトル構造）は slide-rules。§7.9 は本ファイルへの入口
-- 指摘を受けたら本ファイルに1行追記する（slide-rules と同じ蓄積運用）
+---
+
+## 4. Information Design
+
+- **Exhaustive MECE Bloat**: Compulsively categorizing every minor detail into exhaustive taxonomies, where disclaimers and introductory fluff outweigh actionable substance → Prune ruthlessly.
+- **The Human Counter-Standard**: Concise sentences; 1 thought per bullet; specific figures, dates, and explicit trade-offs; clear acknowledgment of constraints and uncertainties.
+
+---
+
+## 5. 30-Second Pre-Flight Self-Check (Before Delivery)
+
+1. Have you deleted empty buzzwords, filler connectors, and throat-clearing openers?
+2. Have you stripped emojis, decorative bullet symbols, and excessive bolding?
+3. If you read the text out loud, does it sound like something an experienced human partner would say in a boardroom?
+4. Are conclusions stated directly without timid hedges?
+5. If a bullet or slide feels wordy, have you condensed it by at least 30%?
+
+---
+
+## Integration and Workflow
+
+- **Presentation Slides**: Governed formally under `slide-rules.md §7.9`. The automated linter `check_deck.py` flags high-confidence AI smell patterns as `WARN`.
+- **Division of Responsibility**: Phrasing habits common to both emails and slides belong in this lexicon. Rules specific to slide architecture (canvas layout, table axes, title message lines) belong in `slide-rules.md`.
+- **Accumulation**: When you receive review feedback identifying unnatural phrasing, append a new line to this lexicon to continuously refine standards.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// HTMLデッキを描画し、スライドごとの要素（塗り・罫線・多角形・文字・表・画像）を座標付きで JSON に書き出す。
-// html_to_pptx.py が内部で呼ぶ。単体: node html_dump.mjs deck.html outdir  → outdir/dump.json と outdir/img_*.png
-// SVG・canvas・img・背景画像は要素単体をスクリーンショットして PNG にする（透過）。
+// Render HTML deck and export per-slide elements (fills, borders, polygons, text, tables, images) with coordinates to JSON.
+// Called internally by html_to_pptx.py. Standalone: node html_dump.mjs deck.html outdir  → outdir/dump.json and outdir/img_*.png
+// SVG, canvas, img, and background images are screenshotted individually as transparent PNGs.
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { openPage } from "./lib_cdp.mjs";
@@ -10,11 +10,11 @@ const [, , file, outdir] = process.argv;
 if (!file || !outdir) { console.error("usage: node html_dump.mjs deck.html outdir"); process.exit(2); }
 mkdirSync(outdir, { recursive: true });
 
-const SCALE = 2; // 画像の解像度（CSS px の2倍）
+const SCALE = 2; // Image resolution (2x CSS px)
 let page;
 try { page = await openPage(file, { scale: 1 }); } catch (e) { console.error(String(e.message || e)); process.exit(3); }
 
-// ---- ページ内で実行する採取 ----------------------------------------------------
+// ---- Extraction executed inside the page ----------------------------------------------------
 const collect = () => {
   const MM = 96 / 25.4;
   const rgba = (s) => {
@@ -36,7 +36,7 @@ const collect = () => {
   let capId = 0;
   const captures = [];
 
-  // clip-path: polygon(...) を要素の左上基準の px 座標列に
+  // Convert clip-path: polygon(...) to px coordinate sequence relative to element top-left
   const polygonOf = (el, r) => {
     const cp = getComputedStyle(el).clipPath || "";
     const m = cp.match(/^polygon\((.*)\)$/);
@@ -49,7 +49,7 @@ const collect = () => {
       if (!/^[\d.\s()+\-*/]+$/.test(e)) return null;
       try { return Function(`return (${e})`)(); } catch { return null; }
     };
-    // カンマで点を分割（calc の中のカンマは無い前提）
+    // Split points by comma (assuming no commas inside calc)
     const pts = m[1].replace(/^\s*(nonzero|evenodd)\s*,/, "").split(",").map((p) => {
       const t = p.trim().match(/^(calc\([^)]*\)|\S+)\s+(calc\([^)]*\)|\S+)$/);
       if (!t) return null;
@@ -69,11 +69,11 @@ const collect = () => {
       underline: (st.textDecorationLine || "").includes("underline"),
       color: c ? c.hex : "#000000",
       font: (st.fontFamily || "").split(",")[0].replace(/["']/g, "").trim(),
-      // 明朝かどうかは先頭の書体名で決める（末尾の総称 sans-serif に "serif" が含まれるので全体では判定しない）
+      // Determine serif based on leading font family name (generic sans-serif at the end contains "serif", so don't evaluate the whole string)
       serif: (() => { const f0 = (st.fontFamily || "").split(",")[0].replace(/["']/g, "").trim(); return /Serif|Mincho|明朝/i.test(f0) || f0 === "serif"; })(),
     };
   };
-  // CSS の text-transform（英字の大文字表示など）を文字に反映する
+  // Reflect CSS text-transform (such as uppercase) in text
   const tt = (el, t) => {
     const v = getComputedStyle(el).textTransform;
     return v === "uppercase" ? t.toUpperCase() : v === "lowercase" ? t.toLowerCase()
@@ -82,7 +82,7 @@ const collect = () => {
   const isCJK = (ch) => /[　-鿿＀-￯]/.test(ch || "");
   const collapse = (s) => s.replace(/\s+/g, " ");
 
-  // 行頭記号: { char, color, size } か { auto: "arabicPeriod" }。PowerPoint の箇条書き書式（buChar）で再現する
+  // Bullet marker: { char, color, size } or { auto: "arabicPeriod" }. Recreated using PowerPoint bullet format (buChar)
   const marker = (li) => {
     const pb = getComputedStyle(li, "::before");
     const m = (pb.content || "").match(/^"(.*)"$/);
@@ -102,7 +102,7 @@ const collect = () => {
     if (pb.position === "absolute" && left < 0) return -left;
     return 0;
   };
-  // 要素配下の文字を段落（<br>・ブロック境界で改行）とランに分解
+  // Split text under the element into paragraphs (broken by <br> or block boundaries) and runs
   const paragraphsOf = (root) => {
     const paras = [];
     let cur = null;
@@ -126,7 +126,7 @@ const collect = () => {
           if (n.tagName === "BR") { newPara(block); continue; }
           const disp = getComputedStyle(n).display;
           if (INLINE.has(disp)) { walk(n, block); continue; }
-          // ブロック: 新しい段落で中身を読む
+          // Block: read contents in a new paragraph
           newPara(n);
           if (marker(n)) { cur.bullet = marker(n); cur.hang = hangOf(n); }
           walk(n, n);
@@ -137,7 +137,7 @@ const collect = () => {
     newPara(root);
     if (marker(root)) { cur.bullet = marker(root); cur.hang = hangOf(root); }
     walk(root, root);
-    // 空段落・前後の空白を整理し、CJK 同士の間に入った空白（ソースの改行由来）を落とす
+    // Clean up empty paragraphs and surrounding whitespace, dropping whitespace between CJK characters (originating from newlines in source)
     return paras.map((p) => {
       p.runs.forEach((r, i) => {
         r.text = r.text.replace(/([　-鿿＀-￯]) (?=[　-鿿＀-￯])/g, "$1");
@@ -150,7 +150,7 @@ const collect = () => {
     }).filter((p) => p.runs.length);
   };
 
-  // 文字ノードだけの外接矩形と行数（空のインラインチップ・凡例の色見本は含めない）
+  // Bounding box and line count for text nodes only (excluding empty inline chips and legend color swatches)
   const textBox = (nodes) => {
     const rs = [];
     const take = (n) => {
@@ -207,14 +207,14 @@ const collect = () => {
       }
 
       if (tag === "table") {
-        // 表はネイティブの表に（行列の格子を rowspan/colspan 込みで復元）
+        // Convert table to native table (reconstructing matrix grid including rowspan/colspan)
         const grid = [], cells = [], graphicCells = [];
         const isGraphic = (d) => {
           if (!visible(d)) return false;
           if (MEDIA.has(d.tagName.toLowerCase())) return true;
           const ds = getComputedStyle(d), f = rgba(ds.backgroundColor);
           return (f && f.a > 0.05) || (ds.backgroundImage && ds.backgroundImage !== "none") || (ds.clipPath && ds.clipPath !== "none")
-            || (borders(ds).some(Boolean) && !(d.textContent || "").trim()); // 枠線だけの図形（白抜きの○等）
+            || (borders(ds).some(Boolean) && !(d.textContent || "").trim()); // Border-only shapes (such as hollow circles)
         };
         [...el.rows].forEach((row, ri) => {
           grid[ri] = grid[ri] || [];
@@ -243,22 +243,22 @@ const collect = () => {
         const nUnknown = colW.filter((v) => v == null).length;
         for (let i = 0; i < nCols; i++) if (colW[i] == null) colW[i] = nUnknown ? rest / nUnknown : 0;
         items.push({ t: "table", ...rel(r), cols: colW, rows: rowH, cells });
-        // 棒・ヒートマップ・ハーベイボール等を含むセルは、中身を図形と文字として表の上に重ねる
+        // Cells containing bars, heatmaps, Harvey balls, etc.: overlay contents as shapes and text on top of the table
         for (const cell of graphicCells) for (const c of cell.children) visit(c, false);
         for (const cell of graphicCells) if (ownText(cell)) visitOwnText(cell);
         return;
       }
 
-      // 塗り・枠・多角形（ルートのスライド自体の地色は背景として別扱い）
+      // Fills, borders, polygons (root slide background color is treated separately as slide background)
       if (!isRoot) {
         const f = rgba(st.backgroundColor);
         const b = borders(st);
         const poly = polygonOf(el, r);
         const rr = st.borderTopLeftRadius || "0";
-        const ellipse = /%/.test(rr) && parseFloat(rr) >= 50; // 50% の角丸＝楕円（正方形なら円）
+        const ellipse = /%/.test(rr) && parseFloat(rr) >= 50; // 50% border radius = ellipse (or circle if square)
         const radius = /%/.test(rr) ? (parseFloat(rr) / 100) * Math.min(r.width, r.height) : (parseFloat(rr) || 0);
         const hasFill = f && f.a > 0.05;
-        // 幅・高さ0で枠線だけの要素＝CSSの三角形。色のある辺から多角形を作る
+        // Zero-width/height element with border only = CSS triangle. Create polygon from colored side
         if (el.clientWidth === 0 && el.clientHeight === 0 && b.filter(Boolean).length === 1) {
           const [bt, br, bb, bl] = ["Top", "Right", "Bottom", "Left"].map((k) => parseFloat(st[`border${k}Width`]) || 0);
           const W = r.width, H = r.height, k = b.findIndex(Boolean);
@@ -284,7 +284,7 @@ const collect = () => {
         }
       }
 
-      // 文字: ブロック子を持たない要素は丸ごと1つのテキストボックスに
+      // Text: elements without block children become a single text box
       if (textDeep(el) && !hasBlockChild(el) && !doneText.has(el)) {
         const tr = textBox([el]) || el.getBoundingClientRect();
         const lines = tr.lines || 1;
@@ -301,17 +301,17 @@ const collect = () => {
           w: (lines > 1 || vert ? content.width : tr.width) + hang, h: tr.height, lines: vert ? 2 : lines, paras, vert,
         });
         el.querySelectorAll("*").forEach((d) => doneText.add(d));
-        // 子の塗り（インラインのチップ等）は続けて拾う
+        // Continue picking up child fills (inline chips, etc.)
         for (const c of el.children) visit(c, false);
         return;
       }
-      // ブロック子と地の文字が混在: 地の文字ノードを個別に（親のテキストボックスに取り込み済みなら何もしない）
+      // Mixed block children and plain text: visit plain text nodes individually (do nothing if already captured in parent text box)
       if (ownText(el) && !doneText.has(el)) visitOwnText(el);
       for (const c of el.children) visit(c, false);
     };
-    // ブロック子と地の文字が混在する要素（例: 本文＋入れ子の ul を持つ li）。
-    // 連続するインライン（文字ノード・インライン要素）ごとに1つのテキストボックスにする
-    // 塗りか枠のあるインライン要素（タグチップ等）は、周りの文字に混ぜず単独のテキストボックスにする
+    // Elements mixing block children and plain text (e.g. li with body text + nested ul).
+    // Group consecutive inlines (text nodes, inline elements) into single text boxes
+    // Inline elements with fills or borders (tag chips, etc.) become separate text boxes without mixing with surrounding text
     const isChip = (n) => {
       if (n.nodeType !== 1) return false;
       const st = getComputedStyle(n), f = rgba(st.backgroundColor);
@@ -323,7 +323,7 @@ const collect = () => {
       let g = [];
       for (const n of el.childNodes) {
         const inline = n.nodeType === 3 || (n.nodeType === 1 && visible(n) && INLINE.has(getComputedStyle(n).display) && !MEDIA.has(n.tagName.toLowerCase()) && !isChip(n));
-        if (isChip(n)) continue; // チップは子として別に訪問される
+        if (isChip(n)) continue; // Chips are visited separately as children
         if (inline && n.nodeType === 1 && n.tagName === "BR") { g.push(n); continue; }
         if (inline) g.push(n); else { if (g.length) groups.push(g); g = []; }
       }
@@ -374,7 +374,7 @@ const collect = () => {
 let data;
 try { data = await page.evaluate(collect); } catch (e) { console.error(String(e.message || e)); await page.close(); process.exit(4); }
 
-// ---- 画像の切り出し（対象以外を隠して透過PNGで撮る） ------------------------------
+// ---- Image clipping (hide other elements and capture as transparent PNG) ------------------------------
 await page.send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
 for (const c of data.captures) {
   const css = c.mode === "self"

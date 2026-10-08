@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""HTMLデッキ（16:9・1 section = 1スライド）を、編集できる PPTX に変換する。
+"""Converts an HTML deck (16:9, 1 section = 1 slide) into an editable PowerPoint (.pptx) file.
 
-使い方:
-  python3 html_to_pptx.py deck.html                 # deck.pptx を同じフォルダに出力
+Usage:
+  python3 html_to_pptx.py deck.html                 # Outputs deck.pptx in the same directory
   python3 html_to_pptx.py deck.html out.pptx
 
-前提: 資料は HTML で仕上げてから変換する（slide-rules §8.6）。変換は、ユーザーが PPTX を明示的に求めたときだけ行う。
-仕組み: html_dump.mjs が Chrome で描画した要素の位置と見た目を書き出し、本スクリプトが PowerPoint の図形に組み立てる。
-  文字 → テキストボックス（折り返し幅・行間・書体・色を保持）
-  塗り・枠 → 四角形（角丸・多角形の clip-path は形状として再現）／片側だけの罫線 → 直線
-  表 → PowerPoint の表（結合セル・セルの塗り・罫線・余白を保持）
-  SVG・画像・背景画像 → 透過PNG（中の数値は編集できない）
-依存: Node 22+ と Chrome（html_dump.mjs）、python-pptx。
+Prerequisite: Finalize the presentation in HTML first (slide-rules §8.6). Perform conversion only when the user explicitly requests PPTX.
+Mechanism: html_dump.mjs captures element positions and visual styles rendered in Chrome, and this script reconstructs them into PowerPoint native shapes:
+  Text -> Textboxes (preserving line wrap width, line height, font family, color)
+  Fills & Borders -> Rectangles (rounded corners and clip-path polygons reproduced as shapes) / One-sided borders -> Connectors
+  Tables -> PowerPoint tables (preserving merged cells, cell fills, borders, padding, vertical text)
+  SVG, Canvas, Images, Backgrounds -> Transparent PNGs (internal numbers cannot be edited)
+Dependencies: Node 22+ and Chrome (for html_dump.mjs), python-pptx.
 """
 import json
 import re
@@ -19,6 +19,11 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+if hasattr(sys.stdout, "reconfigure") and sys.stdout.encoding:
+    sys.stdout.reconfigure(errors="replace")
+if hasattr(sys.stderr, "reconfigure") and sys.stderr.encoding:
+    sys.stderr.reconfigure(errors="replace")
 
 from lxml import etree
 from pptx import Presentation
@@ -29,8 +34,8 @@ from pptx.oxml.ns import qn
 from pptx.util import Emu, Pt
 
 SLIDE_W, SLIDE_H = 12192000, 6858000
-SANS, SERIF = "Yu Gothic", "Yu Mincho"  # Windows / Mac の PowerPoint にある和文書体
-NO_STYLE_TABLE = "{2D5ABB26-0587-4C30-8999-92F81FD0307C}"  # 表スタイル「スタイルなし、表のグリッドなし」
+SANS, SERIF = "Yu Gothic", "Yu Mincho"  # Standard system fonts available on Windows / Mac PowerPoint
+NO_STYLE_TABLE = "{2D5ABB26-0587-4C30-8999-92F81FD0307C}"  # "No Style, Table Grid" table style ID
 ALIGN = {"left": PP_ALIGN.LEFT, "start": PP_ALIGN.LEFT, "center": PP_ALIGN.CENTER,
          "right": PP_ALIGN.RIGHT, "end": PP_ALIGN.RIGHT, "justify": PP_ALIGN.JUSTIFY}
 VALIGN = {"top": MSO_ANCHOR.TOP, "middle": MSO_ANCHOR.MIDDLE, "bottom": MSO_ANCHOR.BOTTOM}
@@ -39,7 +44,7 @@ VALIGN = {"top": MSO_ANCHOR.TOP, "middle": MSO_ANCHOR.MIDDLE, "bottom": MSO_ANCH
 class Scale:
     def __init__(self, w_px):
         self.k = SLIDE_W / w_px  # EMU / px
-        self.pt = 960.0 / w_px   # pt / px（13.333in × 72pt）
+        self.pt = 960.0 / w_px   # pt / px (13.333in × 72pt)
 
     def __call__(self, v):
         return Emu(int(round(v * self.k)))
@@ -57,7 +62,7 @@ def font_name(run):
 
 
 def strip_style(shape):
-    """add_shape が付ける既定スタイル（影・テーマ色の枠）を外す"""
+    """Removes default styles (shadows, theme outlines) applied by add_shape."""
     st = shape._element.find(qn("p:style"))
     if st is not None:
         shape._element.remove(st)
@@ -72,13 +77,13 @@ def fill_runs(tf, paras, sc, first=True):
             para.line_spacing = Pt(lh * sc.pt)
         para.space_before = para.space_after = Pt(0)
         bu = p.get("bullet")
-        # HTML 側で「• 」を文字で打っている行も、PowerPoint では箇条書き書式にする（slide-rules §7.3）
+        # If HTML uses direct bullet characters, convert to native PowerPoint bullet formatting (slide-rules §7.3)
         if not bu and p["runs"]:
             m = re.match(r"^([•・·–])\s+", p["runs"][0]["text"])
             if m:
                 p = dict(p, runs=[dict(p["runs"][0], text=p["runs"][0]["text"][m.end():])] + p["runs"][1:])
                 bu = {"char": m.group(1), "color": p["runs"][0].get("color"), "size": p["runs"][0]["size"]}
-        if bu:  # 行頭記号は文字で打たず箇条書き書式に（slide-rules §7.3）。ぶら下げで2行目以降を本文の頭に揃える
+        if bu:  # Use native bullet formatting rather than hardcoded character glyphs (slide-rules §7.3)
             first_size = p["runs"][0]["size"] if p["runs"] else 12
             hang = p.get("hang") or first_size * 1.0
             pPr = para._p.get_or_add_pPr()
@@ -129,7 +134,7 @@ def add_rect(slide, it, sc):
         fb.add_line_segments(pts[1:], close=True)
         shp = fb.convert_to_shape()
     elif it.get("ellipse") or (it.get("radius", 0) >= min(it["w"], it["h"]) / 2 - 0.5 and abs(it["w"] - it["h"]) <= 1):
-        shp = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, w, h)  # border-radius 50% → 楕円・円
+        shp = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, w, h)
     elif it.get("radius", 0) > 0.5:
         shp = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
         shp.adjustments[0] = min(0.5, it["radius"] / max(1, min(it["w"], it["h"])))
@@ -168,10 +173,7 @@ def add_line(slide, it, sc):
 
 
 def add_text(slide, it, sc):
-    # 改行がすべて明示（<br>・段落）で、自動の折り返しが無い文字は、PowerPoint でも折り返さない
     single = it.get("lines", 1) <= len(it["paras"])
-    # 1行の文字は折り返さない（PowerPoint の字幅差で改行が増えるのを防ぐ）。複数行は元の折り返し幅に揃える
-    # 複数行も PowerPoint の字幅差で行末の1字（句点など）が次行に落ちないよう、わずかに広げる
     w = it["w"] * (1.04 if single else 1.015) + 2
     x = it["x"]
     align = it["paras"][0].get("align", "left") if it["paras"] else "left"
@@ -181,7 +183,7 @@ def add_text(slide, it, sc):
         x -= (w - it["w"])
     tb = slide.shapes.add_textbox(sc(x), sc(it["y"]), sc(w), sc(max(it["h"], 1)))
     if it.get("role") == "title":
-        tb.name = "Title"  # check_deck.py がタイトルとして読む
+        tb.name = "Title"
     tf = tb.text_frame
     tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
     tf.word_wrap = not single
@@ -208,7 +210,6 @@ def cell_border(cell, side, b, sc):
     else:
         ln.set("w", "0")
         etree.SubElement(ln, qn("a:noFill"))
-    # a:lnL, lnR, lnT, lnB は塗りより前・この順（スキーマ順）
     order = ["a:lnL", "a:lnR", "a:lnT", "a:lnB"]
     idx = 0
     for child in list(tcPr):
@@ -234,7 +235,7 @@ def add_table(slide, it, sc):
         tbl.columns[i].width = sc(w)
     for i, h in enumerate(it["rows"]):
         tbl.rows[i].height = sc(h)
-    for row in tbl.rows:  # 結合で隠れるセルも含め、既定の18ptを外す
+    for row in tbl.rows:
         for cell in row.cells:
             cell.text_frame.paragraphs[0]._p.get_or_add_endParaRPr().set("sz", "100")
     covered = set()
@@ -263,7 +264,6 @@ def add_table(slide, it, sc):
         if c["paras"]:
             fill_runs(tf, c["paras"], sc)
         else:
-            # 空セル（図形を重ねるセルを含む）は既定の18ptのままだと行が伸びるので、行の高さに収まる大きさにする
             h_pt = it["rows"][r0] * sc.pt - (pt + pb) * sc.pt
             size = max(1, min(8, h_pt * 0.7))
             endp = tf.paragraphs[0]._p.get_or_add_endParaRPr()
@@ -276,7 +276,7 @@ def convert(html, out):
         r = subprocess.run(["node", str(here / "html_dump.mjs"), str(Path(html).resolve()), td],
                            capture_output=True, text=True, timeout=600)
         if r.returncode != 0:
-            sys.exit(f"html_dump.mjs 失敗: {r.stderr.strip()[:400]}")
+            sys.exit(f"html_dump.mjs failed: {r.stderr.strip()[:400]}")
         data = json.loads((Path(td) / "dump.json").read_text())
         sc = Scale(data["slideW"])
         prs = Presentation()
@@ -287,7 +287,6 @@ def convert(html, out):
             slide.background.fill.solid()
             slide.background.fill.fore_color.rgb = rgb(s["bg"])
             items = s["items"]
-            # 重なり順: 塗り・線・画像・表は HTML の順、文字はいちばん上
             for it in items:
                 t = it["t"]
                 if t == "rect":
@@ -315,7 +314,7 @@ def main():
     out = args[1] if len(args) > 1 else str(Path(html).with_suffix(".pptx"))
     n = convert(html, out)
     print(f"{n} slides → {out}")
-    print("次: check_deck.py で検査し、PowerPoint で開いて折り返しと重なりを確認する（slide-rules §8.6）")
+    print("Next: Inspect with check_deck.py, then open in PowerPoint to verify text wrap and alignments (slide-rules §8.6)")
 
 
 if __name__ == "__main__":

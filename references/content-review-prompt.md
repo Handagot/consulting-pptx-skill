@@ -1,73 +1,73 @@
-# フレッシュアイ・レビューの指示文（文脈を共有しない別エージェント用）
+# Fresh-Eye Review Instructions (For an Independent Agent Without Prior Context)
 
-機械チェック FAIL 0 のあと、納品前に必ず通す**最終工程**。**作った本人には見えないもの**（微妙な日本語の言い回し、論理展開の飛び・ねじれ、タイトルと図の食い違い、根拠のない評価語、既出ページの焼き直し）を、条件を伏せた別のエージェントに読ませて拾う。
+This is the **mandatory final quality assurance step** conducted after achieving automated check FAIL 0, prior to final delivery. An independent agent with no prior knowledge of the project reviews the deck to catch **blind spots invisible to the author**—awkward phrasing, logical disconnects, discrepancies between titles and visuals, unsubstantiated evaluative claims, and repeated content rehashed from earlier slides.
 
-## 使い方
+## How to Use
 
-1. **デッキのファイルをそのまま渡す**（HTML／PDF／PPTX のパス。画像化は不要）。レビュー用エージェントは Read でファイル本体を読む。HTML はソースから、PDF・PPTX はテキスト抽出で本文・タイトル・表を読める。版面（余白・重なり・はみ出し）まで見せたいときだけ、補助として `pdftoppm -png -r 60 deck.pdf pages/p` の画像を追加で渡す。
-2. 下の指示文を、**デッキの作り方・使ったスキル・こだわった点を一切伝えずに**、別のエージェント（Claude Code の Agent ツール、または新しいセッション）に渡す。`{FILE}` と `{N}` を置き換える。
-2b. **別系統のモデルでも並行に回す（推奨）。** 同じ指示文を Codex CLI にも渡す。PDF はテキストを抽出し、版面はページ画像で渡す:
+1. **Provide the deck file directly** (path to HTML, PDF, or PPTX; no image rendering needed). The review agent reads the file directly using read tools. It can inspect HTML source or extract text from PDF/PPTX for body copy, titles, and tables. Only if full visual canvas evaluation (margins, overlap, overflow) is needed, optionally provide page images via `pdftoppm -png -r 60 deck.pdf pages/p`.
+2. Hand the prompt below to a separate agent (e.g., Claude Code Agent tool or a new session), **without disclosing how the deck was built, what skills were used, or what trade-offs were made**. Replace `{FILE}` and `{N}`.
+2b. **Run in parallel with an alternative model family (Recommended).** Pass the same prompt to an alternative LLM CLI (e.g., Codex CLI). Extract text and pass page images:
    ```bash
    pdftotext -layout deck.pdf deck.txt && pdftoppm -r 55 -jpeg deck.pdf p
    bash -c 'a=(); for f in p-*.jpg; do a+=(--image "$f"); done; codex exec --skip-git-repo-check -s read-only "${a[@]}" -o review.md - < prompt.md'
    ```
-   指示文の「見る対象」は deck.txt と添付画像に書き換える。画像の引数は配列で渡す（文字列に連結すると1つの引数になって失敗する）。プロンプトは標準入力で渡す。2つのレビューで共通の指摘を優先し、片方だけの指摘は採否表で個別に判断する。
-3. 返ってきた指摘を**採否表**にする（下の形式）。全部直すのではなく、1件ずつ「採用／不採用／保留」を決める。判断に迷う指摘（意味が変わる言い換え・構成の組み替え）は依頼者に見せて決めてもらう。
-4. 採用分を直し、機械チェックを再実行する。直さない指摘は理由を1行残す（「表現の好み」「読み手には自明」「事実として正しい」など）。
-5. 採否表は納品報告に添える（何を指摘され、何を直し、何を直さなかったかが一目で分かる形）。
+   Modify the target in the prompt to reference `deck.txt` and attached images. Pass images as an array argument. Pass the prompt via standard input. Prioritize feedback shared across both reviews, and evaluate one-off issues individually in the disposition table.
+3. Compile the reviewer's findings into a **Disposition Table** (format below). Do not blindly accept every critique; categorize each item as "Accept", "Reject", or "Hold". Consult the client or stakeholder on ambiguous points that alter business meaning or structure.
+4. Implement accepted fixes and re-run automated checks (`check_deck.py`). For rejected items, record a 1-line rationale ("Stylistic preference", "Self-evident to target audience", "Factually accurate as stated", etc.).
+5. Attach the completed disposition table to the final delivery summary, providing transparency on what was flagged, what was fixed, and why certain feedback was left as-is.
 
-### 採否表の形式
+### Disposition Table Format
 
-| # | ページ | 指摘（原文のまま） | 種別 | 採否 | 対応／理由 |
+| # | Page | Original Feedback | Category | Decision | Action Taken / Rationale |
 |---|---|---|---|---|---|
-| 1 | P.7 | 「精度帯に追いついた」は完了形で不自然 | 日本語 | 採用 | 「追いついている」に修正 |
-| 2 | P.9 | 前提の表から帰結が導けていない | 論理 | 採用 | 右カラム見出しを「だから、◯◯」に |
-| 3 | P.3 | 「海外プレイヤー」は曖昧 | 日本語 | 不採用 | 意図的な総称。定義済み |
+| 1 | P. 7 | "Caught up with accuracy band" sounds awkward in past tense | Phrasing | Accept | Changed to "Matches industry accuracy benchmark" |
+| 2 | P. 9 | Right-hand column does not follow logically from premise table | Logic | Accept | Changed right header to "Consequently: [Strategic Action]" |
+| 3 | P. 3 | "Global players" is overly vague | Phrasing | Reject | Intentionally broad term; explicitly defined in glossary |
 
-種別は「日本語」「論理」「破綻（数・図・数値）」「体裁」の4つ。
+Categories: **Phrasing**, **Logic**, **Structural Failure (Counts / Visuals / Numbers)**, **Formatting**.
 
 ---
 
-## 指示文（ここからコピー）
+## Reviewer Prompt (Copy from Here)
 
-あなたはプレゼン資料のレビュアーです。1本のプレゼン資料（{N}枚）を読み、**作った本人には見えない破綻**を指摘してください。どう作られたかは知らされません。推測して書く必要もありません。
+You are an executive presentation reviewer. Review this {N}-slide presentation deck and identify **blind spots, logical flaws, and inconsistencies invisible to the author**. You are not told how this presentation was built, nor should you speculate.
 
-### 見る対象
-ファイル `{FILE}`（{N}枚のデッキ。HTML／PDF／PPTX のいずれか）。**Read でファイル全体を読み、全ページを順に確認してください。** 一部だけ読んで推測しないこと。ページ画像が添えられている場合は版面の確認にだけ使う。他のファイル（規約・スキル・テンプレート）は読まないでください。あなた自身の判断で採点します。
+### Review Target
+File `{FILE}` (an {N}-slide deck in HTML, PDF, or PPTX). **Use your file reading tools to read the entire file from beginning to end, inspecting every page sequentially.** Do not make assumptions based on a partial read. If page images are provided, use them strictly to evaluate visual layout and spacing. Do not read other project files (rules, skills, templates). Score the document based on your own professional judgment.
 
-### 最初に自由に書く（型に当てはめる前に）
-下の確認項目を見る前に、**読み手として一番困ること・納得できないこと・自分が決裁者なら突き返す理由**を、思いつく順に自由に書いてください（3〜10件）。確認項目に無い観点（比較の前提が揃っていない、用語が分野の定義とずれている、数字の算式が書かれていない、など）を拾うための欄です。
+### 1. Initial Freeform Critique (Before Applying Frameworks)
+Before reviewing the specific checklist items below, write 3 to 10 immediate observations describing **what would most trouble, confuse, or dissatisfy you as an executive reader, or why you would push back on this deck if you were the decision-maker**. This section exists to surface holistic concerns not captured by structured checklists (e.g., uneven comparison baselines, misaligned industry definitions, missing computational formulas).
 
-### まず確認する2点（日本語と論理。ページ番号付きで報告）
-- **日本語の言い回し**: 日本語話者が読んで引っかかる表現をすべて挙げる。完了形と進行形の取り違え（「追いついた」→「追いついている」）、口語（「コスパが悪い」）、主語や述語が抜けた圧縮語（「手動作成」「精度向上」）、同じ語尾が揃っていないブレット、名詞に畳み込んで読めなくなった長い連体修飾、定義なしの略語・造語、同じ概念の表記ゆれ。**内容が正しくても日本語が不自然なら指摘する。**
-- **論理展開**: タイトルだけを上から通し読みして、話が飛ぶ・戻る・同じことを二度言う・前提なしに結論が出る箇所を挙げる。1ページの中では「左（前提・理由）→右（帰結）」の関係が読めるか、右の見出しが左の内容から導けるか、比較の基準（何と何の比か）が明示されているか。
+### 2. Foundational Review (Phrasing and Logic — Report with Page Numbers)
+- **Language and Phrasing**: Identify any expressions that disrupt executive reading flow. Flag mismatched tenses, colloquialisms ("cost-effective", "game changer"), compressed jargon lacking clear subjects/verbs ("manual creation", "accuracy boosting"), unaligned bullet endings within the same hierarchy level, dense run-on noun phrases, undefined acronyms, or terminology drifting between pages. **Even if the core thesis is sound, flag any awkward or artificial phrasing.**
+- **Narrative Logic**: Read through the slide titles sequentially from top to bottom. Flag any instance where the storyline leaps unexpectedly, backtracks, repeats itself, or reaches conclusions without establishing premises. Within each slide, verify whether the relationship flows clearly from left (premise / evidence) to right (implication / conclusion), whether right-hand headers derive naturally from left-hand facts, and whether comparison baselines (what is being compared against what) are explicit.
 
-### 必ず確認する破綻（ページ番号付きで報告）
-1. **タイトルの数と本文の数の食い違い**: 「3段階」と書いたページに矢羽が4本、「4つの論点」に対して項目が3つ、など
-2. **タイトルと図の結論の食い違い**: タイトルで限定・否定していることを、同じページの図や最終ボックスで断定している
-3. **裏づけのない評価語**: 「限定的」「十分」「問題ない」「最小限」などの評価語が、そのページ内に根拠なく置かれている
-4. **既出ページの焼き直し**: 後半のページが前半の内容をほぼ繰り返しており、新しい論点を足していない
-5. **目次・全体像と本編のずれ**: 冒頭で予告した章立て・論点数・ページ参照と、実際の本編が一致しない
-6. **数値の不整合**: 同じ量が別ページで違う値になっている、合計が合わない、単位・期間が途中で変わる
-7. **出典・注記の欠落**: 数値を載せたページに出所の行がない。例示値・試算値の断りが必要な箇所に無い
-8. **言い回しの不一致**: 同じ内容（結論・主張・定義）が、ページによって違う言い回しで書かれ、別の主張に読める。要約と本編、全体像と結論ページの食い違いを特に見る
-9. **専門用語の誤用**: 業界・学術・法令・制度の用語が、その分野の定義と違う意味・範囲で使われている。疑わしいものは、正しい用語と根拠（どの分野で何を指す語か）を添えて挙げる
+### 3. Critical Structural Failures (Report with Page Numbers)
+1. **Title Count vs. Body Count Mismatches**: e.g., A title announcing "A 3-stage transition" paired with 4 chevrons, or "4 strategic pillars" paired with 3 cards.
+2. **Title vs. Visual Conclusion Conflicts**: e.g., A title qualifying or denying an outcome, while the diagram or conclusion box on that same slide declares it unconditionally.
+3. **Unsubstantiated Evaluative Buzzwords**: Words like "limited", "sufficient", "seamless", or "negligible" used without supporting data or thresholds on that slide.
+4. **Rehashed Content**: Later slides repeating earlier points almost verbatim without introducing a new perspective or layer of analysis.
+5. **Drift Between Overview and Body**: Discrepancies between the chapters, agenda items, or issue counts promised in the overview and the actual content delivered in the deck.
+6. **Numerical Inconsistencies**: The same metric showing conflicting figures across slides, subtotals failing to add up, or units and time horizons shifting without explanation.
+7. **Missing Sources and Attributions**: Missing source lines on slides containing empirical metrics, or absent disclaimers where estimates and sample values are used.
+8. **Inconsistent Phrasing Across Slides**: The same core conclusion, initiative, or definition expressed in varying terms across slides, creating the impression of separate concepts. Pay special attention to discrepancies between the executive summary and the body.
+9. **Misuse of Domain Terminology**: Industry, legal, academic, or technical terms used outside their standard accepted scope or definitions. Flag suspicious terms along with the correct definition and reference source.
 
-### 採点軸（各10点・合計70点）
-1. ストーリーの通り: タイトルだけを上から通し読みして、1本の主張として成立するか
-2. 1枚1メッセージ: 各ページの主張が明確か。詰め込みすぎ・薄すぎがないか
-3. 情報の構造: 比較・因果・並列が適切な形（表・フロー・チャート・2カラム）で表現されているか。グラフ向きのデータが数値の羅列で済まされていないか
-4. 版面の質: 余白バランス・要素の揃い・文字サイズ・はみ出し
-5. 説得力: 読み手が判断・反論・行動するときに、そのまま使える形になっているか
-6. 一貫性: 全ページで体裁・用語・ラベルが揃っているか
-7. 誠実さ: 数値の出所・限界の断り方が適切か。読み手を誤認させないか
+### 4. Evaluation Rubric (10 Points Each, 70 Points Total)
+1. **Storyline Narrative**: Does reading only the titles sequentially form a compelling, airtight executive narrative?
+2. **One Message per Slide**: Is each slide focused on a single clear takeaway, without overcrowding or fluff?
+3. **Information Architecture**: Are comparisons, causal relationships, and breakdowns visualized using the right structural format (tables, flows, charts, 2-column layouts) rather than dense walls of text?
+4. **Layout Quality**: Spacing balance, alignment of elements, font hierarchy, absence of overflows or awkward line wraps.
+5. **Executive Persuasiveness**: Does the deck provide the exact clarity and evidence needed for a decision-maker to decide, debate, or act?
+6. **Deck Consistency**: Are terminology, styling conventions, and labeling formats strictly consistent across all slides?
+7. **Intellectual Honesty**: Are data sources, estimation assumptions, and scope limitations stated transparently without misleading the reader?
 
-### 出力形式
-- 最初に、自由に書いた指摘（ページ番号・引用・問題）
-- 日本語の言い回し・論理展開の指摘を、**ページ番号・該当箇所の引用・何が問題か・言い換え案**の4点で列挙する（多くてよい。10件以上でも構わない）
-- 破綻1〜9の該当箇所を、**ページ番号・該当箇所の引用・何が食い違っているか**の3点で列挙する。該当なしの項目は「該当なし」と書く
-- 軸ごとの点数と、その理由を各1〜2文
-- 合計点
-- **直すべき順に並べた指摘リスト**（上位5件）。各1〜2文で「どう直すか」まで書く
+### 5. Output Format
+- Initial freeform critique (page number, quote, problem identified).
+- Language & phrasing / narrative logic issues: List with **Page Number**, **Exact Quote**, **What Is Wrong**, and **Recommended Revision** (be thorough; 10+ items is completely acceptable).
+- Critical structural failures (items 1–9): List with **Page Number**, **Exact Quote**, and **Nature of Discrepancy** (mark "None identified" for clean categories).
+- Rubric scores per axis (1–10) with 1–2 sentences explaining the rationale for each score.
+- Total score (out of 70).
+- **Prioritized Action List**: Top 5 critical fixes ranked by importance, with 1–2 sentences describing exactly how to fix each item.
 
-盛らずに書いてください。欠点を最低3つ挙げてください。無傷の資料はありません。
+Be candid and rigorous. Identify at least 3 actionable defects. No presentation deck is completely flawless.

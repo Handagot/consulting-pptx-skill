@@ -1,109 +1,109 @@
 ---
 name: consulting-pptx-skill
-description: スライド設計規約 slide-rules.md を核に、経営会議品質のスライドを作るスキル。作成前に規約を読み、HTMLパーツ集（基本27＋追加35の62型）から該当パーツをコピーして組み、規約の範囲で型に囚われず調整し、check_deck.py の機械チェック FAIL 0 で仕上げる。型カタログはレイアウトの発想帳であり、合わせる対象ではない。既存の PowerPoint 資料を渡され、そこへ差し込むページを PPTX で求められたときだけ、その資料のマスターの上に直接組む（slide-rules §8.7）。トリガー例:「コンサル品質のスライドを作って」「規約に沿ったデッキで」「型カタログから選んで」「この pptx に足すページを同じ書式で」。
+description: A skill for producing boardroom-quality presentation slides anchored in the slide design rulebook slide-rules.md. Read the rulebook before drafting, assemble an initial deck from the HTML component libraries (62 archetypes: 27 base + 35 additional), adjust flexibly within the boundaries of the rules without being constrained by archetypes, and finish with 0 FAILs on the automated check_deck.py test. The archetype catalog is an idea book for layouts, not a rigid mold. When provided with an existing PowerPoint file and asked to create insertion pages in PPTX format, build directly on top of that document's master template (slide-rules §8.7). Example triggers: "Create consulting-quality slides", "Build a deck adhering to the rules", "Select from the archetype catalog", "Add pages to this pptx in the same format".
 ---
 
-# コンサル型スライド作成スキル
+# Consulting-Style Slide Creation Skill
 
-主軸は `references/slide-rules.md`。作成前に全文を読み、HTMLパーツ集でたたき台を組み、規約の範囲で調整し、機械チェック FAIL 0 と目視で仕上げる。パーツ集と型カタログは規約を効率よく満たす道具であり、**スライドを型に合わせるのではなく、型をストーリーに合わせて選び、合わなければ捨てて自由に組む。**
+The foundation of this skill is `references/slide-rules.md`. Read the full rulebook before drafting, assemble a starting draft using the HTML component libraries, adjust flexibly within the rule boundaries, and finish with 0 FAILs on automated checks plus visual verification. The component libraries and archetype catalog are tools to satisfy the rules efficiently: **never force a slide into an archetype; choose archetypes to serve your storyline, and discard or adapt them freely if they do not fit.**
 
-成果物は HTML（16:9・1 section = 1スライド）と、Chrome で印刷した PDF。
+Deliverables are HTML (16:9 aspect ratio, 1 section = 1 slide) and PDF printed via headless Chrome.
 
-## ファイルと読むタイミング
+## Files and When to Read/Use Them
 
-| ファイル | 中身 | 読む・使うタイミング |
+| File | Content | When to Read / Use |
 | --- | --- | --- |
-| `references/slide-rules.md` | 規約の正典 | **必読。作成前に全文** |
-| `references/archetype-catalog.md` | 62型の一覧（型ID・型名・使いどころ・どのパーツ集の何番か） | ストーリーラインの各行に見せ方を書くとき |
-| `references/content-review-prompt.md` | フレッシュアイ・レビューの指示文 | 機械チェック通過後、納品前 |
-| `references/ai-smell-lexicon.md` | AI臭ワード・言い回しのリスト | 文章の仕上げ時 |
-| `templates/freeform_parts_16x9.html` | 基本パーツ集 27（表紙・全体マップ・矢羽・前提→帰結・軸のある表・主張パネル・評価表・分布図など）。まずここから | 手順3 |
-| `templates/freeform_parts_more_16x9.html` | 追加パーツ集 35（エグゼクティブサマリー・積み上げ棒・ブリッジ・散布図・比較表・マトリクス・ロードマップ・ガントなど）。基本で足りないとき | 手順3 |
-| `assets/SlideCatalog_16x9.pdf` | 両パーツ集を印刷した62ページ（P.1〜27 基本、P.28〜62 追加） | 型を目で探すとき |
-| `scripts/new_deck.py` | パーツ番号を並べて1本のHTMLを生成 | 手順3 |
-| `scripts/check_deck.py` | 規約の機械チェック（HTML は標準ライブラリのみ） | 手順6 |
-| `scripts/check_layout.mjs` | 重なり・はみ出し・空きの多いページの実レンダリング検査（`npm run setup` で playwright を入れる） | 手順7 |
-| `tests/test_checks.py` | 機械チェックの自己テスト（直していない版で発火し、直した版で通ることを確認） | 機械チェックを足した・直したとき |
-| `scripts/html_to_pptx.py` | 仕上げた HTML を編集できる PPTX に変換（`html_dump.mjs`・`lib_cdp.mjs` を使う） | ユーザーが PPTX を明示したときだけ |
-| `assets/SuperTemplate_62type.pptx` | 62型のPPTX見本帳（全スライド編集可能） | PPTX を手で組むとき |
-| `scripts/measure_deck.py` | 既存の PowerPoint 資料（.pptx／テンプレートの .potx）の書式を測って `skin.json` に書き出す | 既存の資料へ差し込むページを作るとき（最初に）|
-| `scripts/deck_pptx.py` | その資料のマスターの上に、同じ書式のページを組む部品（作例は `examples/house_deck_example.py`） | 同上 |
-| `local/`（git 管理外） | 利用者の組織の規約 `slide-rules.local.md`・禁止語 `forbid.txt`・自前テンプレ（`local/README.md`） | あれば本体の規約の後に必ず読む。無ければ飛ばす |
+| `references/slide-rules.md` | Canonical design rules | **Mandatory reading. Read in full before drafting** |
+| `references/archetype-catalog.md` | Catalog of 62 archetypes (Archetype ID, name, best use cases, component library source) | When assigning visual layouts to each storyline item |
+| `references/content-review-prompt.md` | Fresh-eye review instructions | After passing automated checks, before final delivery |
+| `references/ai-smell-lexicon.md` | List of AI smell / AI slop words, syntax, and tone markers | During final text polishing and self-check |
+| `templates/freeform_parts_16x9.html` | Base component library (27 parts: title page, overview map, chevrons, premise-to-conclusion, tables with axes, claim panels, evaluation matrices, distributions, etc.). Start here | Step 3 |
+| `templates/freeform_parts_more_16x9.html` | Additional component library (35 parts: executive summaries, stacked bars, bridges/waterfalls, scatter plots, comparison tables, 2x2 matrices, roadmaps, Gantt charts, etc.). Use when base parts are insufficient | Step 3 |
+| `assets/SlideCatalog_16x9.pdf` | 62-page visual catalog printed from both component libraries (pp. 1–27 base, pp. 28–62 additional) | When visually browsing layout archetypes |
+| `scripts/new_deck.py` | Assembles a single HTML deck by specifying part numbers | Step 3 |
+| `scripts/check_deck.py` | Automated rule checker (standard library only for HTML) | Step 6 |
+| `scripts/check_layout.mjs` | Live rendering inspection for overlaps, overflow, and excessive whitespace (`npm run setup` installs Playwright) | Step 7 |
+| `tests/test_checks.py` | Self-tests for automated checks (verifies failure on unfixed versions and pass on fixed versions) | When adding or updating automated checks |
+| `scripts/html_to_pptx.py` | Converts finalized HTML into editable PPTX (uses `html_dump.mjs` and `lib_cdp.mjs`) | Only when the user explicitly requests PPTX |
+| `assets/SuperTemplate_62type.pptx` | 62-archetype PPTX sample deck (all slides fully editable) | Reference when assembling PPTX manually |
+| `scripts/measure_deck.py` | Measures styles of existing PowerPoint decks (`.pptx` / template `.potx`) and outputs `skin.json` | When building insertion pages for existing decks (Step 1) |
+| `scripts/deck_pptx.py` | Library for building pages directly on top of an existing deck's master template (sample in `examples/house_deck_example.py`) | Same as above |
+| `local/` (untracked in git) | Organization-specific rules (`slide-rules.local.md`), forbidden terms (`forbid.txt`), custom templates (`local/README.md`) | Read immediately after base rules if present; skip if absent |
 
-## 規約の要点（入口。全文は必ず読む）
+## Key Rule Highlights (Entry Points — Always Read the Full Rules)
 
-- **タイトル**: 結論を書く。1行が基本、長ければ意味の切れ目で2行（縮小して詰めない）。です/ます禁止。タイトルだけ通し読みして1本のストーリーになること
-- **レイアウト**: 1スライド=1メッセージ。左=事実・図、右=意味合い。下部の「POINT」帯禁止
-- **表**: 行=項目・列=観点の「軸のある表」。ヘッダーは本文より大きく太字・塗りなし。最終行の下に罫線なし
-- **装飾**: 角丸禁止。塗りボックスに枠線なし。色分けするなら同一スライドに凡例
-- **図**: 推移・構成比・分布はグラフで描く。表に流し込んで済ませない（§5.11）
-- **数**: タイトルに書いた数と本文の連番を一致させる（§2.9）。ページの中身の個数はタイトルに書かない（§2.4）
-- **文章**: 1資料1用語。略語は初出でフル表記。ブレット語尾は階層内で統一
+- **Titles**: State the conclusion. Default to 1 line; break into 2 lines at natural semantic boundaries if long (never shrink font size to squeeze into 1 line). Avoid polite fluff or casual endings. Reading only the titles consecutively must form a cohesive narrative.
+- **Layout**: 1 slide = 1 message. Left = facts / visuals, Right = implications / So What. Never place bottom "POINT" or "KEY TAKEAWAY" banner blocks.
+- **Tables**: Use structured tables with explicit axes (rows = items, columns = perspectives). Header text must be larger than body text and bold, with no background fill. No border below the bottom row.
+- **Decoration**: No rounded corners. No borders on filled background boxes. If using color categorization, provide an explicit legend on the same slide.
+- **Visuals**: Plot trends, composition breakdowns, distributions, and correlations as charts. Never dump chart-appropriate data into a plain table (§5.11).
+- **Numbers**: Match numbers stated in titles with item counts in the body (§2.9). Do not put pure item counts in titles (§2.4).
+- **Writing**: One term per document. Expand acronyms upon first appearance. Keep bullet endings parallel within the same indentation level.
 
-## 手順
+## Workflow
 
-1. **作る前に定義する**: 目的・成果物の定義・スコープ IN/OUT を3〜5行で先に合意する。
-2. **ストーリーライン**（1枚1行のタイトル列）を書き、各行に見せ方を併記する（図／表／矢羽／2カラム／数値カード）。推移・構成比・分布・相関は必ず図。見せ方に迷う行は `references/archetype-catalog.md` を見る。
-   - 章扉は b27（アジェンダ再掲型）。section は `s chap` でページ番号に数えない（§4.45）。10枚前後なら章扉は要らない。
-   - 表の列幅: 列の内容が同種（時点・案・部門）なら `<table class="eq">` で等幅にし、最後の列だけに余白を吸わせない。説明・ブレットの列があるときだけ、その列に余白を渡す。
-   - 枚数に上限があるときの削る順: 章扉・目次 → 全体マップと重複する本文 → 補足・付録。表紙・全体マップ・結論ページ・裏表紙は残す。リスクの列挙は対応策と同じ1枚にする（§4.29）。
-3. **たたき台を生成する**:
+1. **Define Before Producing**: Agree on the objective, deliverable definition, and in-scope / out-of-scope boundaries in 3–5 lines beforehand.
+2. **Draft the Storyline**: Write a storyline (one title per slide) and specify the visual approach for each line (chart / table / chevron / 2-column / stat cards). Trends, composition, distribution, and correlation must always be charts. Refer to `references/archetype-catalog.md` when deciding on layouts.
+   - Section dividers use archetype b27 (agenda divider). Sections are marked `<section class="s chap">` and omitted from page numbering (§4.45). Decks with ~10 slides or fewer do not need section dividers.
+   - Table column widths: When columns contain homogeneous data (time periods, options, departments), use `<table class="eq">` for equal column widths to prevent whitespace from accumulating exclusively in the rightmost column. Reserve extra width only for description / bullet columns.
+   - When facing slide limits, cut in this order: Section dividers & table of contents → Body slides overlapping with the overview map → Supplementary / appendix slides. Keep the title page, overview map, conclusion slide, and back cover. Consolidate risks and mitigations into a single slide (§4.29).
+3. **Generate the Draft Deck**:
    ```bash
-   python3 scripts/new_deck.py --list                                   # 番号と型名（b01〜b27 基本／m01〜m35 追加）
-   python3 scripts/new_deck.py --parts b01,b02,m05,b06,b09,b10 --title "資料名" -o mydeck.html
+   python3 scripts/new_deck.py --list                                   # List part numbers and archetype names (b01–b27 base / m01–m35 additional)
+   python3 scripts/new_deck.py --parts b01,b02,m05,b06,b09,b10 --title "Deck Title" -o mydeck.html
    ```
-   両パーツ集のCSS結合・見出し様式の統一・ページ番号の振り直しはスクリプトが行う。手でコピーして組まない。生成後、プレースホルダー（`Text N` / `ラベル N` / `YYYY`）を実物に差し替える。
-4. **グラフが要るページは、表パーツに流し込まず自分で描く。**
-5. **調整**: 表を2枚に割る、右カラムを帰結形に書き直す、粒度の揃わない並列を書き直す。1枚ごとに「この型のままでよいか」を疑う。受けた指摘は slide-rules.md に1行追記し、測れる指摘は機械チェックにもする（slide-rules §8「指摘は規約1行と機械チェックの両方にする」）。
-6. `python3 scripts/check_deck.py mydeck.html` → FAIL 0（表紙・裏表紙・章扉の「タイトル空」WARN は許容）。出力されるタイトル一覧を通し読みする。本文に残ったプレースホルダー、型名のままのタイトル、2文以上詰めた文章塊も FAIL になる。
-   - 社外に出すデッキは、顧客名・社内語・案件コードを1行1語で書いたリスト（リポジトリの外に置く）を当てる: `python3 scripts/check_deck.py mydeck.html --forbid ~/.config/deck-forbidden-terms.txt`。HTMLコメントや属性に残った語も拾い、語そのものは出力に出さない。
-7. `node scripts/check_layout.mjs mydeck.html` → OK（playwright が別の場所にあるなら `PLAYWRIGHT_MODULE_DIR` で指す）。版面の40%超が空いたページも FAIL になる。
-8. **フレッシュアイ・レビュー**: `references/content-review-prompt.md` の指示文を、作り方を伏せた別のエージェントに渡してデッキのファイルを読ませる。指摘を採否表（採用／不採用／保留＋理由）にし、採用分だけ直して手順6・7を再実行する。
-9. **PDF 化して全ページ目視する。** 機械チェックは重なり・はみ出し・規約違反しか見ない。棒が潰れる、図が空になる、下半分が空く、泣き別れ、左右の下端不揃いは目視でしか分からない。パーツのCSSは自分のデッキ側で直してよい（直したら templates/ にも反映する）。
+   The script merges CSS from both libraries, standardizes header styles, and renumbers pages. Do not copy and stitch HTML manually. After generation, replace all placeholders (`Text N`, `Label N`, `YYYY`) with real content.
+4. **Draw charts from scratch**: When a slide requires a chart, do not force data into a table component.
+5. **Refine and Adjust**: Split dense tables across two slides, rewrite right-hand columns into crisp implications, align parallel bullet granularities. Question every slide: "Is this archetype truly optimal?" For every piece of review feedback, add a 1-line rule to `slide-rules.md`, and turn measurable rules into automated checks (slide-rules §8: "Turn feedback into both a 1-line rule and an automated check").
+6. `python3 scripts/check_deck.py mydeck.html` → Must achieve FAIL 0 (empty title WARNs on title page, back cover, and section dividers are acceptable). Read through the printed list of titles sequentially. Placeholders remaining in body text, titles retaining raw archetype names, or blocks containing two or more run-on sentences will trigger FAILs.
+   - For client-facing decks, check against a forbidden terms list containing client names, internal jargon, and project codes (placed outside the repository): `python3 scripts/check_deck.py mydeck.html --forbid ~/.config/deck-forbidden-terms.txt`. This catches terms in HTML comments and attributes without echoing the forbidden words in stdout.
+7. `node scripts/check_layout.mjs mydeck.html` → Must pass OK (specify `PLAYWRIGHT_MODULE_DIR` if Playwright is installed elsewhere). Pages with over 40% unused vertical canvas space will trigger FAILs.
+8. **Fresh-Eye Review**: Hand the review prompt in `references/content-review-prompt.md` to an independent agent without revealing the creation instructions. Compile feedback into a disposition table (Accept / Reject / Hold + rationale), fix accepted items, and re-run steps 6 and 7.
+9. **Export to PDF and visually inspect every page**: Automated checks catch overlaps, overflows, and rule violations. Only visual inspection reveals compressed bars, blank figures, bottom-heavy whitespace, orphaned words, or misaligned bottom baselines. Feel free to tweak component CSS in your deck (reflect worthwhile improvements back into `templates/`).
    ```bash
    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu \
      --no-pdf-header-footer --print-to-pdf=mydeck.pdf mydeck.html
    ```
 
-## PowerPoint（.pptx）が要るとき
+## When PowerPoint (.pptx) Is Required
 
-**資料は HTML で仕上げる。PPTX にするのは、ユーザーが「PPTX で」「パワポにして」と明示したときだけ。** 修正・レビューの往復はすべて HTML 上で回し、変換は最後に1回だけにする。HTML のほうが直すのも機械チェックも速く、PPTX で直すと HTML と中身がずれる。PPTX を渡した後に修正が来たら、HTML を直して変換し直す。明示が無ければ PDF で渡す。
+**Finalize the deck in HTML first. Convert to PPTX only when the user explicitly requests PPTX.** Run all revision and review iterations in HTML, executing conversion only once at the very end. HTML enables significantly faster edits and automated checks, whereas editing PPTX leads to divergence from HTML sources. If modifications are requested after PPTX delivery, update HTML and re-convert. Unless PPTX is specified, deliver PDF.
 
-1. HTML で手順6〜9（機械チェック FAIL 0・フレッシュアイ・レビュー・PDF 目視）まで済ませる
-2. 変換: `python3 scripts/html_to_pptx.py mydeck.html` → 同じフォルダに mydeck.pptx（Node 22+・Chrome・`pip3 install python-pptx` が必要）
-3. `python3 scripts/check_deck.py mydeck.pptx` を FAIL 0 に。PowerPoint で開いて（または PDF に書き出して）文字の折り返しと重なりを目視する
-4. 社外に送るなら、ファイルのプロパティ（作成者・会社名など）を消す
+1. Complete steps 6–9 in HTML (automated check FAIL 0, fresh-eye review, visual PDF inspection).
+2. Convert: `python3 scripts/html_to_pptx.py mydeck.html` → Produces `mydeck.pptx` in the same directory (requires Node 22+, Chrome, and `pip3 install python-pptx`).
+3. Run `python3 scripts/check_deck.py mydeck.pptx` until FAIL 0. Open in PowerPoint (or export to PDF) and visually inspect text wrap and shape alignments.
+4. If sending externally, sanitize file metadata properties (author, organization, etc.).
 
-変換の中身と限界（詳細は slide-rules.md §8.6）:
-- 編集できる形で再現: 文字（書体・大きさ・色・行間・折り返し幅・箇条書き書式）、塗りと枠（角丸・clip-path の多角形・CSS の三角形）、罫線、表（結合セル・セルの塗り・罫線・余白・縦書き）
-- 画像になる（中の文字や数値は編集できない）: SVG のチャート・図、img、背景画像
-- 書体は和文ゴシック＝Yu Gothic、明朝＝Yu Mincho に置き換える。字幅の差で行末が1字ずれることがあるので目視は省かない
-- 再現しない: 回転・変形（CSS の transform）、`::before`/`::after` で描いた装飾（背景付きの丸数字など。行頭記号の文字は箇条書き書式として再現する）。これらはパーツ側で使わないか、変換後に PowerPoint で直す
+Conversion Capabilities and Constraints (details in slide-rules.md §8.6):
+- Fully editable shapes: Text (font, size, color, line height, wrap width, bullet styles), fills and borders (rounded corners, clip-path polygons, CSS triangles), borders, tables (merged cells, cell fills, borders, padding, vertical text).
+- Rasterized images (text/values inside cannot be edited): SVG charts and diagrams, `<img>` tags, background images.
+- Fonts: Replaced with standard system equivalents. Visual inspection is mandatory as minor font metric differences can alter line wrap points.
+- Not reproduced: CSS `transform` rotations/skews, pseudo-element decorations (`::before`/`::after` badges). Avoid these in templates or fix them in PowerPoint after conversion.
 
-PPTX を一から手で組むときの見本として `assets/SuperTemplate_62type.pptx`（62型・全スライド編集可能）も置いてある。
+`assets/SuperTemplate_62type.pptx` (62 archetypes, fully editable slides) is also provided as a manual reference template.
 
-### 既存の資料へ差し込むページ
+### Inserting Pages into Existing Decks
 
-入れる先の PowerPoint 資料（社内の標準デッキ・作りかけの提案書）を渡されたときは、変換せずに **その資料のマスターの上で直接組む**。変換した PPTX は書体と版面が自前なので、差し込むと浮く（slide-rules §8.7）。文章・表の軸・1枚1メッセージの規約はそのまま。
+When provided with an existing destination PowerPoint deck (internal corporate template, work-in-progress proposal), do not use HTML conversion; **build directly on top of that document's master template**. Converted PPTX files carry their own font and margin defaults, which look out of place when spliced into house decks (slide-rules §8.7). General writing, table axis, and 1-slide-1-message rules still apply.
 
-1. 測る: `python3 scripts/measure_deck.py house.pptx` → `house.skin.json`（書式が .potx で配られたときもそのまま渡せる）。要約を読み、資料を目で見て値を直す
-2. 組む: `examples/house_deck_example.py` を手本に `scripts/deck_pptx.py` で組む。書体・地色・ページ番号をスライドに書かない／タイトルはプレースホルダー／表はテキストボックス＋罫線（`table()`）／色は資料のテーマ色
-3. `python3 scripts/check_deck.py pages.pptx --house house.skin.json` → FAIL 0。**PowerPoint で開く前に必ず通す**（不正なファイルを開かせると、ユーザーの PowerPoint に修復のダイアログが残る）
-4. 全ページを目視する（手段は slide-rules §8 の目視QAと同じ）
-5. 渡すのは差し込むページだけのファイル。資料へ入れるのはユーザー（「貼り付け先のテーマを使用」）
+1. Measure: `python3 scripts/measure_deck.py house.pptx` → Generates `house.skin.json` (also accepts `.potx` template files). Read the summary and visually verify values against the deck.
+2. Build: Use `scripts/deck_pptx.py`, guided by `examples/house_deck_example.py`. Do not hardcode fonts, background colors, or slide numbers onto slides; keep titles in placeholders; construct tables using textboxes + rules (`table()`); use the house deck's theme colors.
+3. Validate: `python3 scripts/check_deck.py pages.pptx --house house.skin.json` → Achieve FAIL 0. **Always pass this check before opening in PowerPoint** (opening a corrupted XML file leaves a persistent repair dialog in PowerPoint).
+4. Visually inspect all pages (using the visual QA procedures in slide-rules §8).
+5. Deliver only the newly created insertion pages. The user performs the insertion into their main deck ("Keep Source Formatting" or "Use Destination Theme").
 
-## 本スキル使用の注釈
+## Skill Attribution Note
 
-「本資料は consulting-pptx-skill（github.com/carnot-tech/consulting-pptx-skill）で作成」の一文は裏表紙（b10）の左下の出典行に既定で入っている。置けるのは**最終ページの出典行だけ**。他のページにツール名が出ていると `check_deck.py` が FAIL にする（クライアントに出せる体裁）。裏表紙を使わないデッキでは最終ページの出典行に足す。
+The credit line `"Created with consulting-pptx-skill (github.com/carnot-tech/consulting-pptx-skill)"` is included by default in the bottom-left source line of the back cover (b10). This credit may appear **only on the final slide's source line**. If the tool name appears on any other slide, `check_deck.py` will report a FAIL (maintaining executive-ready presentation hygiene). In decks without a back cover, append it to the source line of the final content slide.
 
-## スキルを育てる（更新・自分の規約・PR）
+## Evolving the Skill (Updates, Custom Rules, PRs)
 
-このスキルは規約と機械チェックを使った人の指摘で良くなる。次の 3 つを作業の一部として行う。
+This skill improves through ongoing feedback from real-world usage. Perform these three actions as part of your standard workflow:
 
-1. **最新を取り込む。** セッションの最初に、スキルのフォルダが git clone なら `git fetch` して `origin/main` より遅れていれば「スキルの最新版を取り込みますか」と一度だけ聞く（目安は週 1 回）。`git pull` で取り込む。利用者の変更は `local/` に置くので衝突しない。本体のファイルを直接直している場合は、その差分を先に `local/` か PR に逃がす
-2. **自分の規約は `local/` に置く。** 利用者から「当社ではこうする」という指摘を受けたら、本体の `references/slide-rules.md` を書き換えず `local/slide-rules.local.md` に 1 行足す。顧客名・案件コードは `local/forbid.txt` に入れて `--forbid` で検査する。自前のパーツ集・差し込み先の資料・`skin.json` は `local/templates/`
-3. **汎用化できる指摘は PR にする。** 作業中に、本体の規約の誤検知・見逃し・どの組織でも効く新しい指摘に当たったら、納品後に「この修正を本体に PR で出しませんか」と一度だけ提案する。出し方は `CONTRIBUTING.md`（規約 1 行＋`check_deck` の判定＋修正前に FAIL・修正後に通るテスト）。**PR を作る前に `CONTRIBUTING.md` の「PR に入れないもの」を読む**: 顧客名・案件コード・金額・担当者名・実案件のファイル・`skin.json` は差分にもコミットメッセージにも PR 説明にも入れない（会話に出た案件の文脈が混ざりやすいので push 前に差分と説明を見直す）。1 社の好みや理由の書けない規則は本体でなく `local/` へ。既定を変える規則は条件付きで書く。利用者が承諾したら `gh pr create` まで行う。断られたら次のセッションまで再提案しない
+1. **Pull the latest updates.** At the start of a session, if the skill directory is a git clone, run `git fetch`. If it is behind `origin/main`, ask once: "Would you like to pull the latest version of the skill?" (recommended weekly). Pull via `git pull`. User customizations reside in `local/` and will not conflict. If core files were directly modified, move those diffs to `local/` or open a PR first.
+2. **Store custom rules in `local/`.** When users specify organization-specific rules ("At our company, we do X"), do not edit core `references/slide-rules.md`; append a line to `local/slide-rules.local.md`. Place customer names and project codes in `local/forbid.txt` and check with `--forbid`. Store custom templates, house decks, and `skin.json` in `local/templates/`.
+3. **Contribute generalizable improvements via PR.** When encountering false positives, false negatives, or universally applicable design improvements during work, propose once after delivery: "Would you like to submit this improvement to upstream via PR?" Follow `CONTRIBUTING.md` (1 rule line + `check_deck` check + test failing before fix and passing after fix). **Review "What NOT to include in PRs" in `CONTRIBUTING.md` before opening a PR**: Never include customer names, project codes, financial amounts, personal names, real engagement files, or `skin.json` in diffs, commit messages, or PR descriptions. Company-specific preferences belong in `local/`, not upstream. Rules changing defaults must be conditional. If accepted, proceed through `gh pr create`. If declined, do not re-prompt until the next session.
 
-## 色と書体
+## Colors and Typography
 
-両パーツ集の既定は同じ暖色系（生成りの地・濃茶の文字・茶のアクセント。本文ゴシック・見出し明朝）。トークンは各ファイルの `<style>` 冒頭 `:root`。片方を変えたらもう片方も揃える。ネイビー系の値はコメントで同梱。意味を持つ色（✕の赤など）は変えない。2系列の区別はメインカラー×グレーの2色に抑える。製品UIのスクリーンショットは無加工。
+Both component libraries default to the same warm executive palette (cream background, deep espresso ink, warm brown accent; serif headings, sans-serif body). Tokens are managed in the `:root` block of each file's `<style>` section. When modifying one, update the other to match. Cool navy palette values are provided in accompanying comments. Semantic colors (e.g., red for errors / negative deltas) must remain consistent. Restrict two-series comparisons to main brand color vs. neutral gray. Keep screenshots of product user interfaces unedited.

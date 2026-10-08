@@ -1,21 +1,28 @@
 #!/usr/bin/env python3
-"""pptxのレイアウト崩れを機械的に見つける。
+"""Mechanically detect layout corruptions in pptx files.
 
-見つけるもの
-  hidden   … 後ろに描かれた不透明な図形に覆われて、文字が見えなくなっている
-  empty    … 文字も画像も無い箱（消し忘れの吹き出し・枠）
-  outside  … スライドの外にはみ出している
-  overflow … 箱に対して文字が多すぎて溢れている
-  squash   … 画像の縦横比が元と大きく違う（引き伸ばし）
+Detects:
+  hidden   ... text covered by opaque shapes drawn on top, making it unreadable
+  empty    ... empty boxes with neither text nor images (forgotten callouts, borders)
+  outside  ... elements extending beyond the slide boundary
+  overflow ... text volume too large for its bounding box
+  squash   ... image aspect ratio significantly distorted compared to original
 
-使い方: python3 scripts/check_deck_layout.py <pptx> [ページ番号...]
+Usage: python3 scripts/check_deck_layout.py <pptx> [page_numbers...]
 
-結果はすべて WARN 扱い（終了コードは常に 0）。overflow は文字数からの見積もりなので
-実際の表示と差が出る。検出するのは「中身の無い箱」で、空のページ・空の表は対象外。
-HTML は対象外（HTML は check_layout.mjs）。
+All results are treated as WARN (exit code is always 0).
+Overflow is estimated from character count and may differ from actual rendering.
+Only flags empty standalone boxes; blank slides and empty tables are out of scope.
+HTML is out of scope (use check_layout.mjs for HTML).
 """
 import math
 import sys
+
+if hasattr(sys.stdout, "reconfigure") and sys.stdout.encoding:
+    sys.stdout.reconfigure(errors="replace")
+if hasattr(sys.stderr, "reconfigure") and sys.stderr.encoding:
+    sys.stderr.reconfigure(errors="replace")
+
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.oxml.ns import qn
@@ -59,7 +66,7 @@ def overlap(a, b):
 
 
 def is_opaque(sh):
-    """塗りつぶし or 画像 で下が見えなくなる図形か"""
+    """Check whether shape obscures what lies underneath via fill or image"""
     if sh.shape_type == MSO_SHAPE_TYPE.PICTURE:
         return True
     try:
@@ -100,11 +107,11 @@ def check(path, pages=None):
             l, top, w, h = box
             if w <= 0 or h <= 0:
                 continue
-            # 外にはみ出していないか
+            # Check if outside boundary
             if l < -w * 0.5 or top < -h * 0.5 or l + w > SW + w * 0.5 or top + h > SH * 1.02:
-                issues.append((n, "outside", f"{(t or sh.name)[:24]} が枠外 ({l/EMU_IN:.1f}in,{top/EMU_IN:.1f}in)"))
+                issues.append((n, "outside", f"{(t or sh.name)[:24]} is out of bounds ({l/EMU_IN:.1f}in, {top/EMU_IN:.1f}in)"))
             if t:
-                # 上に乗っている不透明な図形に覆われていないか
+                # Check if covered by opaque shape on top
                 covered = 0
                 for sh2, box2 in items[i + 1:]:
                     if sh2 is sh or not is_opaque(sh2):
@@ -113,44 +120,44 @@ def check(path, pages=None):
                         continue
                     covered = max(covered, overlap(box, box2))
                 if covered > w * h * 0.85:
-                    issues.append((n, "hidden", f"『{t[:26]}』が他の図形に隠れている"))
-                # 文字が溢れていないか（ざっくり見積もり）
+                    issues.append((n, "hidden", f"'{t[:26]}' is obscured by another shape"))
+                # Check text overflow (rough estimate)
                 pt = font_pt(sh)
                 cpl = max(1, int((w / EMU_IN * 72) / (pt * 1.02)))
                 lines = sum(max(1, math.ceil(len(p.text) / cpl)) for p in sh.text_frame.paragraphs)
                 need = lines * pt * 1.45 / 72 * EMU_IN
                 if top + need > SH:
-                    issues.append((n, "outside", f"『{t[:22]}』が溢れてスライドの外に出ている"))
+                    issues.append((n, "outside", f"'{t[:22]}' overflows outside the slide"))
                 elif need > h * 1.3 and h > 100000:
-                    issues.append((n, "overflow", f"『{t[:22]}』が箱から溢れている（必要{need/EMU_IN:.1f}in / 箱{h/EMU_IN:.1f}in）"))
+                    issues.append((n, "overflow", f"'{t[:22]}' overflows its box (needs {need/EMU_IN:.1f}in / box {h/EMU_IN:.1f}in)"))
             else:
-                # 文字も画像も無い箱（枠だけの強調は許容するので、塗りがあるものだけ）
-                # 高さか幅が 0.05in 未満の図形は線（罫線・区切り）なので箱として扱わない
+                # Boxes with neither text nor image (border-only highlights are allowed, only check filled shapes)
+                # Shapes with height or width < 0.05in are lines/dividers, not treated as boxes
                 thin = min(w, h) < 0.05 * EMU_IN
                 if sh.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE and is_opaque(sh) and not thin:
-                    # 画像の上の強調枠、または上に文字が載っている下地なら問題なし
+                    # Highlight frames over pictures or background panels under text are acceptable
                     on_pic = any(sh2.shape_type == MSO_SHAPE_TYPE.PICTURE and overlap(box, box2) > w * h * 0.5
                                  for sh2, box2 in items)
                     has_label = any(text_of(sh2) and overlap(box, box2) > w * h * 0.3
                                     for sh2, box2 in items[i + 1:])
                     if not on_pic and not has_label:
-                        issues.append((n, "empty", f"中身の無い箱 ({w/EMU_IN:.1f}x{h/EMU_IN:.1f}in)"))
+                        issues.append((n, "empty", f"Empty box without content ({w/EMU_IN:.1f}x{h/EMU_IN:.1f}in)"))
             if sh.shape_type == MSO_SHAPE_TYPE.PICTURE:
-                # 画像が塗りつぶしの図形に覆われていないか
+                # Check if image is covered by filled shape
                 for sh2, box2 in items[i + 1:]:
                     if sh2.shape_type == MSO_SHAPE_TYPE.PICTURE or not is_opaque(sh2):
                         continue
                     if text_of(sh2):
                         continue
                     if overlap(box, box2) > w * h * 0.15:
-                        issues.append((n, "hidden", f"画像の{overlap(box, box2)/(w*h)*100:.0f}%が塗りつぶしの箱に覆われている"))
+                        issues.append((n, "hidden", f"{overlap(box, box2)/(w*h)*100:.0f}% of image covered by filled shape"))
                         break
                 try:
                     iw, ih = sh.image.size
                     if iw and ih:
                         r = (w / h) / (iw / ih)
                         if r > 1.25 or r < 0.8:
-                            issues.append((n, "squash", f"画像の縦横比が{r:.2f}倍ずれている"))
+                            issues.append((n, "squash", f"Image aspect ratio distorted by {r:.2f}x"))
                 except Exception:
                     pass
     return issues
@@ -162,4 +169,4 @@ if __name__ == "__main__":
     issues = check(path, pages)
     for n, kind, msg in issues:
         print(f"p{n:<3} [{kind}] {msg}")
-    print(f"--- {len(issues)} 件")
+    print(f"--- {len(issues)} issues")

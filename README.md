@@ -1,152 +1,199 @@
 # consulting-pptx-skill
 
-**AIに「まじ」なPowerPointを作らせるためのClaude Codeスキル。**
-AIワークフロープラットフォーム [Jinba](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_intro) を提供するメンバーにより作成されました。
+**A Claude Code / Antigravity skill for producing boardroom-quality presentation decks.**
+Created by the team building the AI workflow platform [Jinba](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_intro).
 
-スライドの設計規約、規約違反を見つける機械チェック、**62型のHTMLパーツ集**（基本27＋追加35）、型カタログPDFをまとめたものです。資料は HTML（16:9）で組み、Chrome で PDF に書き出します。
+This skill brings together an executive slide design rulebook, automated linters that catch rule violations, a **62-archetype HTML slide component library** (16:9 aspect ratio, 1 section per slide, printed to PDF via headless Chrome), and a visual archetype catalog PDF.
 
-進め方は、規約を読む → パーツ集から必要なパーツを取り出して1枚ずつ組む → 機械チェックを通す → 作り方を知らない別のエージェントにレビューさせる、の順です。
+The standard workflow is: read the rulebook → assemble slides one by one from the component library → pass automated checks with 0 FAILs → run a fresh-eye review with an independent agent that knows nothing about how the deck was built.
 
 A Claude Code skill for generating boardroom-quality decks: a slide-design rulebook, an automated rule checker, a 62-part HTML slide library (16:9, one section per slide, printed to PDF via Chrome), and a visual catalog PDF.
 
-私たちが実際に毎週の提案書・報告書づくりで使っている仕組みの公開版です。解説記事はこちら → [AIにまじなスライド作らせる（note）](https://note.com/jinbaflow/n/nc8372b84e572)
+This is the public release of the exact system we use internally every week to produce client proposals and executive reports.
 
-> **企業でお使いの方へ**
-> - Claude Code を使わず、ブラウザのチャットだけで同じ仕組みを使いたい → [Jinba App](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_app)
-> - 自社の資料規約・ブランドに合わせた専用版を作りたい、社内に展開したい → [ご相談はこちら](https://jinba.io/ja/contact-sales?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_contact)
+> **For Enterprise Users**
+> - Want to use this exact system directly in your browser chat without Claude Code? → [Jinba App](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_app)
+> - Want a customized version tailored to your company's slide guidelines and brand identity, deployed organization-wide? → [Contact Sales](https://jinba.io/ja/contact-sales?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=top_contact)
 
-## 本質は `references/slide-rules.md`
+---
 
-このリポジトリでいちばん価値があるのは、実はテンプレでもスクリプトでもなく、**[slide-rules.md](references/slide-rules.md)** というテキストファイルです。「結論はタイトルに書く」「角丸禁止」「塗りのあるボックスに枠線を付けない」「1資料1用語」「前提・定義は左、帰結は右」…。
+## The Core Value: `references/slide-rules.md`
 
-使い方は3つだけです。**AIに資料を作らせる前に毎回このファイルを読ませる。出力後に `scripts/check_deck.py` で違反を機械検出する。最後に `references/content-review-prompt.md` の指示文で、作り方を知らない別のエージェントにデッキを読ませ、日本語・論理・矛盾の指摘を受けて採用分だけ直す。** AIはセッションごとに記憶がリセットされるので、口頭で注意しても定着しません。ルールをファイルにして毎回読ませるのが定着させる方法です。
+The most valuable asset in this repository is neither the templates nor the scripts—it is the markdown document **[slide-rules.md](references/slide-rules.md)**.
+"State conclusions directly in the title", "No rounded corners", "Never add borders to filled boxes", "One term per document", "Premises and definitions on the left, implications on the right"...
 
-良いスライドを決めるのは型ではなく、**組んだ後の調整**です。表を2枚に割る、右カラムを帰結の形に書き直す、タイトルだけを通して読んでストーリーを繋ぎ直す。型に囚われず直し、そこで受けた指摘を slide-rules.md に1行足す。この繰り返しが品質の源で、型カタログとパーツ集は「たたき台を早く出して、調整に時間を回す」ための道具です。
+There are only three steps in the core workflow:
+1. **Have the AI read this file before generating any slides.**
+2. **Automatically detect violations using `scripts/check_deck.py` after generation.**
+3. **Run a fresh-eye review using `references/content-review-prompt.md` with an independent agent that has no prior context, gathering feedback on phrasing, logic, and contradictions, and fixing accepted items.**
 
-自社で使うときは、slide-rules.md に自社の規約・指摘を追記して育ててください。
+Because AI context resets with every session, verbal reminders do not stick. Codifying the rules into a file and loading it every time is the only reliable way to enforce standards.
 
-## 62型のスライド型カタログ
+Great slides are determined not by archetypes, but by **post-draft adjustments**: splitting a dense table across two slides, rewriting right-hand columns into crisp implications, reading only the titles sequentially to re-align the narrative arc. Adjusting freely beyond rigid archetypes and capturing lessons learned into `slide-rules.md` is the true source of quality. The archetype catalog and component libraries exist to produce initial drafts quickly so you can spend your time on adjustments.
 
-入口は **[assets/SlideCatalog_16x9.pdf](assets/SlideCatalog_16x9.pdf)**（62ページ）です。P.1〜27 が基本パーツ集、P.28〜62 が追加パーツ集を印刷したもので、型ID・型名・使いどころの一覧は [references/archetype-catalog.md](references/archetype-catalog.md) にあります。
+When using this within your organization, cultivate your own rules and feedback by appending them to `slide-rules.md` (or `local/slide-rules.local.md`).
 
-「62型」は作れる見せ方の上限ではありません。実際のデッキでは、型を組み合わせたり崩したりして規約の範囲で自由に組むので、見せ方のパターンはこれより多くなります。型カタログは「レイアウトの発想帳」として使い、合わなければ捨ててください。
+---
 
+## 62-Archetype Slide Catalog
 
-## パーツ集の使い方
+Start by exploring **[assets/SlideCatalog_16x9.pdf](assets/SlideCatalog_16x9.pdf)** (62 pages). Pages 1–27 display the base component library, and pages 28–62 show the additional component library. A complete listing of archetype IDs, names, and recommended use cases is in [references/archetype-catalog.md](references/archetype-catalog.md).
 
-| ファイル | 中身 | 使用頻度 |
+"62 archetypes" is not an upper limit on layout possibilities. In production decks, you freely combine, adapt, and deconstruct archetypes within the boundaries of the rules, creating far more visual patterns. Use the catalog as an idea book for layouts; if an archetype does not fit your story, discard it.
+
+---
+
+## How to Use the Component Libraries
+
+| File | Content | Usage Frequency |
 | --- | --- | --- |
-| `templates/freeform_parts_16x9.html`（基本パーツ集） | 表紙・全体マップ・目次・章扉・矢羽・前提→帰結・軸のある表・主張パネル・評価表・分布図など27パーツ | 高い。まずここから |
-| `templates/freeform_parts_more_16x9.html`（追加パーツ集） | エグゼクティブサマリー・積み上げ棒・ブリッジ・散布図・比較表・マトリクス・イシューツリー・ロードマップ・ガントなど35パーツ | 低い。基本で足りないとき |
+| `templates/freeform_parts_16x9.html` (Base Library) | 27 components: title page, overview map, TOC, section divider, chevrons, premise-to-conclusion, tables with axes, claim panels, evaluation matrices, distribution charts, etc. | High. Start here. |
+| `templates/freeform_parts_more_16x9.html` (Additional Library) | 35 components: executive summary, stacked bars, waterfalls/bridges, scatter plots, comparison tables, 2x2 matrices, issue trees, roadmaps, Gantt charts, etc. | Medium. Use when base library is insufficient. |
 
-どちらも 16:9・1 section = 1スライドの単体HTMLです。`scripts/new_deck.py --parts b01,m05,...` のようにパーツ番号を並べると、必要なパーツだけを取り出した1本のHTMLができます（2ファイルの見た目の定義は、衝突しないようにスクリプトが結合します）。あとはプレースホルダー（本文 `Text 1`、項目名 `ラベル 1`、見出し `タイトル 1`、数値 `00`、年 `YYYY年`、出典 `出典：Source 1`）を実物に差し替えます。残っていると `check_deck.py` が FAIL にします。
+Both files are standalone 16:9 HTML documents (1 section = 1 slide). Specifying component IDs with `scripts/new_deck.py --parts b01,m05,...` extracts only the needed components into a single HTML deck (the script automatically merges style definitions without class collisions). Replace placeholder text (`Text 1`, `Label 1`, `Title 1`, `00`, `YYYY`, `Source: Source 1`) with your real content. Remaining placeholders will trigger FAILs in `check_deck.py`.
 
-各 section のタイトル欄には型名だけが入っていて、見本の主張文は置いていません。見本文があると、その文型をなぞった資料になってしまうからです（slide-rules §2.8）。タイトルは必ず自分のストーリーラインから書きます。
+The title placeholder of each section contains only the archetype name, without sample assertions. Sample assertions tend to bias the author into copying that specific sentence pattern (slide-rules §2.8). Always write titles directly from your storyline.
 
-**色と書体は両ファイルで同じ既定**です（暖色系: 生成りの地・濃茶の文字・茶のアクセント。見出しは明朝、本文はゴシック）。各ファイルの `<style>` 冒頭にある `:root` の変数で一括管理していて、ネイビー系にする値はコメントで同梱しています。
+**Colors and typography share the same defaults across both files** (Warm palette: cream background, deep espresso ink, warm brown accent; serif headings, sans-serif body). Styles are managed via `:root` CSS variables at the top of each file's `<style>` block. Cool navy palette values are provided in accompanying comments.
 
-## セットアップ
+---
+
+## Setup
 
 ```bash
-# 1. Claude Code のスキルフォルダに clone する（これだけで規約・パーツ集・機械チェックが使える）
+# 1. Clone into your Claude Code skills directory (enables rules, components, and automated checks immediately)
 git clone https://github.com/carnot-tech/consulting-pptx-skill.git ~/.claude/skills/consulting-pptx-skill
 
-# 2.（任意）実レンダリング検査 check_layout.mjs を使う場合。Node.js が必要。playwright と Chromium が入る
+# 2. (Optional) For live rendering layout checks via check_layout.mjs. Requires Node.js. Installs Playwright and Chromium.
 cd ~/.claude/skills/consulting-pptx-skill && npm run setup
 
-# 3.（任意）PPTX に変換する・PPTX を check_deck.py で検査する場合（変換には Node.js 22 以上と Chrome も使う）
+# 3. (Optional) For PPTX conversion or inspecting PPTX files with check_deck.py (requires Node.js 22+ and Chrome)
 pip3 install python-pptx
 ```
 
-- `scripts/check_deck.py`（規約の機械チェック）と `scripts/new_deck.py`（たたき台の生成）は Python 標準ライブラリだけで動きます。
-- PDF 化は Chrome のヘッドレス印刷を使います（コマンドは次節）。
-- `package.json` は手順2の playwright を入れるためだけのものです。`node_modules/` は .gitignore 済みです。
+- `scripts/check_deck.py` (rule checker) and `scripts/new_deck.py` (draft generator) run entirely on Python's standard library with zero external dependencies.
+- PDF generation uses headless Google Chrome print (see command below).
+- `package.json` exists solely for installing Playwright in Step 2. `node_modules/` is already in `.gitignore`.
 
-## 更新と自分用のカスタマイズ
+---
 
-規約と機械チェックは使った人の指摘で頻繁に直ります。**週に 1 回を目安に最新を取り込んでください**。
+## Updates and Customization
+
+The rules and automated checks evolve frequently based on real user feedback. **We recommend pulling the latest version weekly**:
 
 ```bash
 cd ~/.claude/skills/consulting-pptx-skill && git pull
 ```
 
-自分の組織の規約・禁止語・テンプレは `local/` に置きます（`local/README.md` 参照。git 管理外なので `git pull` で消えません）。スキルは本体の規約を読んだ後に `local/slide-rules.local.md` を読み、重なる規則はそちらを優先します。本体のファイルを直接書き換えると更新のたびに衝突するので、組織固有の規則は `local/` に、どの組織でも効く規則は PR にしてください。
+Store your organization's custom rules, forbidden terms, and templates in `local/` (see `local/README.md`; untracked in git, so `git pull` will never overwrite them). The skill reads core rules first, then applies `local/slide-rules.local.md`, giving precedence to local rules when they overlap. Modifying core files directly causes merge conflicts on updates; place organization-specific rules in `local/` and submit universally applicable rules upstream via Pull Request.
 
-## 手動で使う場合
+---
+
+## Manual CLI Usage
 
 ```bash
-python3 scripts/new_deck.py --list                                          # パーツ番号と型名の一覧
-python3 scripts/new_deck.py --parts b01,b02,m05,b06,b09,b10 --title "資料名" -o mydeck.html   # たたき台を生成
-python3 scripts/check_deck.py mydeck.html           # 規約の機械チェック（FAIL 0 にする）
-python3 scripts/check_deck.py mydeck.html --forbid ~/.config/deck-forbidden-terms.txt   # 社外に出す前に顧客名・社内語の残りを検査（リストはリポジトリ外に置く）
-node scripts/check_layout.mjs mydeck.html           # フッター重なり・はみ出し・空きの多いページの実レンダリング検査
+# List part numbers and archetype names
+python3 scripts/new_deck.py --list
+
+# Generate a starter deck
+python3 scripts/new_deck.py --parts b01,b02,m05,b06,b09,b10 --title "Project Strategy" -o mydeck.html
+
+# Automated rule check (must achieve FAIL 0)
+python3 scripts/check_deck.py mydeck.html
+
+# Check for residual client names / internal jargon before external release (list kept outside repo)
+python3 scripts/check_deck.py mydeck.html --forbid ~/.config/deck-forbidden-terms.txt
+
+# Inspect live rendering for footer overlaps, overflow, and excessive whitespace
+node scripts/check_layout.mjs mydeck.html
+
+# Print to PDF via Chrome
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu \
   --no-pdf-header-footer --print-to-pdf=mydeck.pdf mydeck.html
-python3 scripts/html_to_pptx.py mydeck.html         # PPTX を求められたときだけ: 編集できる PPTX に変換
+
+# Convert to editable PPTX (only when explicitly requested)
+python3 scripts/html_to_pptx.py mydeck.html
 ```
 
-## PowerPoint（.pptx）にする流れ
+---
 
-**まず HTML で仕上げ、PPTX にするのはユーザーから明示されたときだけ**にしています。
+## Converting to PowerPoint (.pptx)
 
-1. HTML でデッキを組み、機械チェック・レビュー・PDF での目視まで HTML 上で済ませる（修正の往復が速く、機械チェックもかけやすい）
-2. 「PPTX で欲しい」と言われたら `scripts/html_to_pptx.py` で変換する。Chrome で描画した結果を読み取り、PowerPoint の図形として組み直すので、文字・表・図形はそのまま PowerPoint で編集できる
-3. PPTX を渡した後に修正が来たら、HTML を直して変換し直す（PPTX を手で直すと HTML と中身がずれる）
+**Always finalize your deck in HTML first. Convert to PPTX only when explicitly requested by the user.**
 
-SVG のチャートや画像は画像として貼られます（中の数値は編集できません）。書体は Yu Gothic / Yu Mincho に置き換わるので、変換後は PowerPoint で開いて折り返しを確認してください。
+1. Assemble the deck in HTML, running automated checks, reviews, and visual PDF verification on HTML (edits are faster, and linters run seamlessly).
+2. When asked for PPTX, convert via `scripts/html_to_pptx.py`. It inspects Chrome's rendered output and reconstructs elements as PowerPoint native shapes, keeping text, tables, and shapes fully editable.
+3. If revisions arrive after PPTX delivery, modify the HTML source and re-convert (editing PPTX directly causes content divergence).
 
-### 既にある PowerPoint 資料へページを足すとき
+SVG charts and external graphics are embedded as high-resolution images (numerical data inside them cannot be edited). Fonts are mapped to standard system fonts (Yu Gothic / Yu Mincho, Helvetica / Georgia). Always open in PowerPoint to verify text wrapping after conversion.
 
-社内の標準デッキや作りかけの提案書に数ページ足す場合、変換した PPTX は書体・文字の大きさ・表の作りが元の資料と揃いません。このときは変換せず、**その資料のマスターの上に直接組みます**。
+### Adding Pages to an Existing PowerPoint Deck
+
+When adding pages to an existing corporate deck or in-progress proposal, a converted PPTX will not match the typography, font sizes, or table conventions of the original. In this scenario, do not convert HTML; **build directly on top of the destination deck's master template**.
 
 ```bash
-python3 scripts/measure_deck.py house.pptx                      # 資料の書式を測る → house.skin.json（目で見て直す）。.potx も可
-python3 examples/house_deck_example.py house.pptx pages.pptx    # 作例。資料のマスターの上に 2 ページ組む
+# Measure the source deck's styles -> house.skin.json (inspect and adjust). Supports .potx templates too.
+python3 scripts/measure_deck.py house.pptx
+
+# Build 2 insertion pages on top of the source deck's master template (sample script)
+python3 examples/house_deck_example.py house.pptx pages.pptx
+
+# Verify compliance with house styles
 python3 scripts/check_deck.py pages.pptx --house house.skin.json
 ```
 
-タイトルは資料のプレースホルダーに入り、書体・地色・ページ番号は資料のマスターがそのまま決めます。表は資料と同じ「テキストボックス＋罫線」で組むので、貼り付けても書式が変わりません。詳しくは slide-rules.md §8.7。
+Titles occupy native layout placeholders, while typography, slide background, and page numbering are governed by the master template. Tables are constructed using textboxes and borders matching the source deck, ensuring formatting stays intact upon insertion. See slide-rules.md §8.7 for full details.
 
-## 中身
+---
 
-| パス | 内容 |
+## Repository Contents
+
+| Path | Description |
 | --- | --- |
-| `SKILL.md` | AIへの指示書（スキルの本体）。考え方と手順だけを書き、詳細は `references/` に置く |
-| `templates/freeform_parts_16x9.html` | 基本パーツ集（27パーツ・1パーツ=1スライド・16:9） |
-| `templates/freeform_parts_more_16x9.html` | 追加パーツ集（35パーツ。チャート・比較表・マトリクス・計画系） |
-| `references/slide-rules.md` | スライド作成ルール正典 |
-| `references/archetype-catalog.md` | 62型の型カタログ（型ID・型名・使いどころ・どのパーツ集の何番か） |
-| `references/content-review-prompt.md` | フレッシュアイ・レビューの指示文。機械チェックのあと、作り方を伏せた別エージェントにデッキのファイルを渡して日本語・論理・破綻を拾わせ、採否表にして直す |
-| `references/ai-smell-lexicon.md` | AI臭ワード・言い回しのリストとセルフチェック |
-| `scripts/new_deck.py` | パーツ番号を並べて1本のデッキHTMLを生成（両パーツ集のCSSをスコープして結合・ページ番号の振り直し） |
-| `scripts/check_deck.py` | 規約の機械チェック（HTML / PPTX 両対応。テンプレ集の検査は `--template`）。タイトルの「N段階」と本文の連番の食い違いも FAIL にする |
-| `scripts/html_to_pptx.py` | HTMLデッキを編集できる PPTX に変換（ユーザーが PPTX を求めたときだけ使う）。`scripts/html_dump.mjs` が Chrome で描画した要素を書き出し、python-pptx で組み立てる。追加の npm パッケージは不要（`scripts/lib_cdp.mjs` が Chrome を直接操作する） |
-| `scripts/check_layout.mjs` | HTMLデッキの実レンダリング検査（フッターとの重なり・右端/下端のはみ出し・版面の40%超の空き） |
-| `scripts/measure_deck.py` | 既存の PowerPoint 資料の書式（レイアウト・タイトルの枠・文字の大きさ・書体の指定の有無・罫線・色）を測り、`skin.json` に書き出す |
-| `scripts/deck_pptx.py` | 測った書式で、その資料のマスターの上に編集可能なページを組む部品（タイトル・見出し・罫線の表・強調の面・矢羽・✓✕△）。作例は `examples/house_deck_example.py` |
-| `tests/` | 機械チェックの自己テスト（`python3 -m unittest discover -s tests`）。指摘を機械チェックにしたら、直していない版で FAIL が出ることをここで確かめる |
-| `assets/SlideCatalog_16x9.pdf` | **62型のスライド型カタログ（両パーツ集を印刷した62ページ）。型を探すときの入口** |
-| `assets/SuperTemplate_62type.pptx` | 62型のPPTX見本帳（全スライド編集可能）。PowerPoint で手動コピーして使うときの見本。パーツ集の正本ではない |
+| `SKILL.md` | Core AI skill specification. Contains methodology and workflow, linking to `references/` for details. |
+| `templates/freeform_parts_16x9.html` | Base component library (27 components, 1 component = 1 slide, 16:9). |
+| `templates/freeform_parts_more_16x9.html` | Additional component library (35 components: charts, comparisons, matrices, planning). |
+| `references/slide-rules.md` | The canonical slide design rulebook. |
+| `references/archetype-catalog.md` | Catalog of 62 slide archetypes (ID, name, use cases, source component numbers). |
+| `references/content-review-prompt.md` | Fresh-eye review instructions. Used by an independent agent to catch logic, flow, and phrasing issues without knowing creation history. |
+| `references/ai-smell-lexicon.md` | AI smell / slop vocabulary, syntax markers, and self-check guide. |
+| `scripts/new_deck.py` | Assembles a single HTML deck from specified part numbers (scoped CSS merging, page renumbering). |
+| `scripts/check_deck.py` | Automated rule linter (supports both HTML and PPTX; `--template` for checking libraries). Catches count discrepancies between titles and body. |
+| `scripts/html_to_pptx.py` | Converts HTML decks to editable PPTX. `html_dump.mjs` renders elements in Chrome, and `python-pptx` reassembles them. No extra npm packages needed (`lib_cdp.mjs` speaks CDP directly). |
+| `scripts/check_layout.mjs` | Live rendering layout checker (footer overlaps, right/bottom overflow, >40% empty canvas space). |
+| `scripts/measure_deck.py` | Measures styles of existing PowerPoint decks (layout, title frames, font sizes, borders, colors) and writes `skin.json`. |
+| `scripts/deck_pptx.py` | Builds editable slides directly on top of a measured master template (titles, tables, callout panels, chevrons, status icons). Sample in `examples/house_deck_example.py`. |
+| `tests/` | Linter self-tests (`python3 -m unittest discover -s tests`). Verifies that rules fail on unfixed versions and pass on fixed versions. |
+| `assets/SlideCatalog_16x9.pdf` | **62-archetype slide catalog (62 pages printed from both libraries). Starting point for visual layout selection.** |
+| `assets/SuperTemplate_62type.pptx` | 62-archetype PPTX reference deck (all slides editable). Reference for manual PowerPoint assembly. |
 
-## カスタマイズ
+---
 
-- 色・書体は両パーツ集の `<style>` 冒頭 `:root` トークンで差し替えます。ブランドに合わせるときは両ファイルを同じ値にします
-- 生成した資料の**最終ページの出典行だけ**に「consulting-pptx-skill で作成」の注釈を入れます。他のページにツール名が出ていると `check_deck.py` が FAIL にします
-- PowerPoint（.pptx）が要るときは、HTML で仕上げてから `scripts/html_to_pptx.py` で変換します（上の「PowerPoint（.pptx）にする流れ」）。以前あった JSON から編集可能PPTXを書き出す仕組みは外しました（git タグ `pipeline-archived` の時点のリポジトリに残っています）
+## Customization
 
-## コントリビューション
+- Colors and fonts can be customized in the `:root` tokens at the beginning of each component file's `<style>` block. Keep both files synchronized when tailoring to your brand.
+- Add the `"Created with consulting-pptx-skill"` attribution **only on the final slide's source line**. If the tool name appears on any other slide, `check_deck.py` reports a FAIL.
+- When PPTX is required, finalize in HTML first, then convert via `scripts/html_to_pptx.py`.
 
-Issue・Pull Request を歓迎します。出し方（規約と機械チェックをセットで足す、機密を入れない、テストの書き方など）は [CONTRIBUTING.md](CONTRIBUTING.md) にまとめています。
+---
 
-使っていて「この指摘は当社だけでなく誰にでも効く」と思ったら、それが一番よい PR の種です。スキル自身も、本体の規約の誤検知や新しい指摘に当たったとき「PR で出しませんか」と一度だけ聞くようになっています。`local/` に溜まった規則のうち顧客名の入っていないものを、月に 1 回見直して PR にするのがおすすめです。
+## Contributing
+
+Issues and Pull Requests are warmly welcomed. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines (coupling rules with automated tests, keeping confidential data out of PRs, writing tests, etc.).
+
+If you discover a rule during production that benefits everyone, that is the best seed for a PR. The skill is designed to prompt once: "Would you like to open a PR for this improvement?" when encountering false positives or new generalizable rules. Reviewing non-confidential rules accumulated in `local/` once a month and submitting them upstream is highly recommended.
+
+---
 
 ## About
 
-Made by [Carnot AI](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about) — AIエージェント基盤「Jinba」を開発・提供しています。
+Created by [Carnot AI](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about) — developers of the AI agent platform "Jinba".
 
-- **ブラウザだけで使いたい方へ**：このスキルと同じ仕組みを、チャットだけで使える形（[Jinba App](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about_app)）でも提供しています。Claude Code や Python の準備は要りません。
-- **自社専用版を作りたい企業へ**：御社の既存資料とレビュー指摘から slide-rules.md とデザインを作り込み、社内のだれもが使える形で展開するご支援をしています。[ご相談はこちら](https://jinba.io/ja/contact-sales?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about_contact)
+- **For browser-only users**: This same mechanism is available as a turnkey chat application ([Jinba App](https://jinba.io/ja?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about_app)) without requiring Claude Code or Python environments.
+- **For enterprise custom deployments**: We help organizations build tailored `slide-rules.md` and design systems from their existing presentation archives and executive review feedback, deploying them across internal teams. [Contact Sales](https://jinba.io/ja/contact-sales?utm_source=github&utm_medium=readme&utm_campaign=consulting-pptx-skill&utm_content=about_contact).
+
+---
 
 ## License
 
-コード・文書は [MIT License](LICENSE) です。MIT License には商標を使う権利は含まれません。「Carnot」「Carnot AI」「Jinba」とロゴの扱いは [TRADEMARK.md](TRADEMARK.md)（事実としての言及・クレジット行・リンクは自由、製品名・ロゴ・公式を装う表現・改変版への商標使用は要許可）に従ってください。
+Code and documentation are licensed under the [MIT License](LICENSE). The MIT License does not include rights to use trademarks. Treatment of "Carnot", "Carnot AI", "Jinba", and associated logos is governed by [TRADEMARK.md](TRADEMARK.md) (truthful references, credit lines, and links are free; product names, logos, official endorsements, and trademark usage on derivative works require written permission).

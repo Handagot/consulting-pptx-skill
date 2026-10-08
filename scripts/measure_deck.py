@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""既存の PowerPoint 資料の書式を測り、skin.json に書き出す。
+"""Measure formatting of existing PowerPoint presentations and export to skin.json.
 
-使い方:
-  python3 measure_deck.py house.pptx                 # 要約を表示し、house.skin.json を同じフォルダに出力
+Usage:
+  python3 measure_deck.py house.pptx                 # Display summary and output house.skin.json in the same folder
   python3 measure_deck.py house.pptx -o skin.json
-  python3 measure_deck.py house.potx                 # PowerPoint テンプレート（.potx）も測れる
-  python3 measure_deck.py house.pptx --layout "タイトルとコンテンツ"   # 本文ページのレイアウトを名前で指定する
+  python3 measure_deck.py house.potx                 # PowerPoint templates (.potx) can also be measured
+  python3 measure_deck.py house.pptx --layout "Title and Content"   # Specify body slide layout by name
 
-出力は deck_pptx.py（その資料のマスターの上にページを組む）と check_deck.py --house（書式が合っているかの検査）が読む。
-測るのは、本文ページで最も使われているレイアウトとタイトル・副題の枠、文字の大きさ、書体を run に直指定しているか、
-テキストボックスの余白と段組み（lstStyle）、罫線の色と太さ、表オブジェクトの有無、強調と面の色、ページ番号の出どころ。
+The output is read by deck_pptx.py (building slides directly onto the deck's master) and check_deck.py --house (validating formatting compliance).
+Measures: most frequently used body slide layout, title/subtitle boxes, font sizes, whether font typeface is explicitly set on runs,
+textbox padding and list styling (lstStyle), rule line colors and widths, presence of table objects, emphasis and panel fills, and page number origin.
 
-色は役割（強調・面・丸）ごとに多い順で 3 つまで候補を残し（color_options）、組む側で選べる。
-資料が HEX で書いた色でも、テーマ色かその明暗（PowerPoint の「明るく 40%」等）と一致すればテーマ色に置き換える。
-こうしておくと、差し込んだ先のテーマが変わっても色が付いてくる。
-値は機械的に拾った出発点。資料を目で見て確かめてから使う（slide-rules §8.7）。
-依存: python-pptx。
+Colors retain up to 3 candidates per role (emphasis, panel, accent) ordered by frequency (color_options), selectable when building.
+Even if the presentation uses HEX colors, matching theme colors or their tints (e.g. PowerPoint's "Lighter 40%") are converted to theme color references.
+This ensures colors adapt even if the destination presentation's theme changes.
+Values are a mechanical starting point. Always visually verify against the presentation before use (slide-rules §8.7).
+Dependency: python-pptx.
 """
 import collections
 import colorsys
@@ -25,12 +25,17 @@ import sys
 import zipfile
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure") and sys.stdout.encoding:
+    sys.stdout.reconfigure(errors="replace")
+if hasattr(sys.stderr, "reconfigure") and sys.stderr.encoding:
+    sys.stderr.reconfigure(errors="replace")
+
 EMU = 914400
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 P = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
 NEUTRAL = {"tx1", "bg1", "dk1", "lt1", "000000", "FFFFFF"}
-NG_RED = "FF0000"   # ✕ の赤。意味を持つ赤はブランドに寄せない（§5.8）。skin の colors.ng で変えられる
-# PowerPoint の色の選択肢に並ぶ明暗（lumMod, lumOff）。HEX の色をテーマ色に読み替えるときに試す
+NG_RED = "FF0000"   # Red for X. Semantic red is never aligned to brand colors (§5.8). Can be changed in skin colors.ng
+# Tint levels (lumMod, lumOff) appearing in PowerPoint color pickers. Tested when mapping HEX colors to theme colors
 TINTS = [(None, None), (20000, 80000), (40000, 60000), (60000, 40000), (75000, None), (50000, None),
          (50000, 50000), (65000, 35000), (75000, 25000), (85000, 15000), (95000, 5000),
          (95000, None), (85000, None), (65000, None), (90000, None)]
@@ -42,7 +47,7 @@ def inch(v):
 
 
 def color_spec(el):
-    """<a:solidFill> を持つ要素から "accent2|lumMod=20000|lumOff=80000" の形を作る。無ければ None。"""
+    """Construct 'accent2|lumMod=20000|lumOff=80000' form from an element with <a:solidFill>. Return None if absent."""
     fill = el.find(A + "solidFill") if el is not None else None
     if fill is None or not len(fill):
         return None
@@ -56,7 +61,7 @@ def color_spec(el):
 
 
 def theme_colors(theme_xml, master_xml):
-    """スライドで使う名前（tx1・accent2 等）→ その資料のテーマでの HEX。マスターの clrMap を通して引く。"""
+    """Map slide color name (tx1, accent2, etc.) to HEX in the presentation theme via master clrMap."""
     slots = {}
     for slot, body in re.findall(r"<a:(dk1|lt1|dk2|lt2|accent\d|hlink|folHlink)>(.*?)</a:\1>", theme_xml, re.S):
         m = re.search(r'(?:srgbClr val|lastClr)="([0-9A-Fa-f]{6})"', body)
@@ -75,7 +80,7 @@ def _tint(hexv, mod, off):
 
 
 def to_theme(spec, theme):
-    """HEX の色（"808080"）が、テーマ色かその明暗と一致すればテーマ色の書き方に直す。一致しなければそのまま。"""
+    """Convert HEX color ('808080') to theme color notation if it matches a theme color or tint. Otherwise keep as-is."""
     if not spec or not re.fullmatch(r"[0-9A-F]{6}", spec):
         return spec
     want = tuple(int(spec[i:i + 2], 16) for i in (0, 2, 4))
@@ -92,13 +97,13 @@ def top(counter, skip=(), n=1):
 
 
 def pick_body_layout(slides, with_title):
-    """本文ページのレイアウトを選ぶ。使われた回数が多い順。
+    """Select layout for body slides based on frequency of use.
 
-    表紙・章扉・本文を 1 枚ずつ並べた見本（テンプレート配布物に多い）では回数が同点になり、
-    先頭（表紙）が選ばれてしまう。同点のときは
-      1. タイトル枠が中央タイトル（ctrTitle＝表紙・章扉向け）でないレイアウト
-      2. 資料の後ろのほうで使われているレイアウト（表紙は先頭に来る）
-    の順で本文らしいほうを採る。
+    In sample decks where Title, Section, and Body appear once each (common in template distributions),
+    frequencies tie and the first (Title) might be chosen. In case of ties:
+      1. Layouts where the title frame is not center title (ctrTitle = for title/section dividers)
+      2. Layouts used later in the presentation (title comes first)
+    preferring whichever looks more like a body slide.
     """
     from pptx.enum.shapes import PP_PLACEHOLDER
 
@@ -115,25 +120,25 @@ def pick_body_layout(slides, with_title):
 
 
 def measure(path, layout=None):
-    """layout: 本文ページのレイアウト名。省くと pick_body_layout で選ぶ。"""
+    """layout: Body slide layout name. If omitted, selected via pick_body_layout."""
     from lxml import etree
     from pptx.enum.shapes import PP_PLACEHOLDER
     from pptx_open import open_presentation
 
-    prs = open_presentation(path)   # .potx（テンプレート）もそのまま測れる
+    prs = open_presentation(path)   # .potx (templates) can also be measured directly
     sw, sh = prs.slide_width, prs.slide_height
     slides = list(prs.slides)
     if not slides:
-        sys.exit("スライドが 1 枚もない資料は測れない（書式は実際のページから読む）")
+        sys.exit("Cannot measure a deck with 0 slides (formatting is read from actual slides)")
 
-    # ---- 本文ページのレイアウト（タイトル枠のあるもの）。指定が無ければ使われ方から選ぶ
+    # ---- Body slide layout (one with a title frame). If not specified, chosen by usage
     use = collections.Counter(s.slide_layout.name for s in slides)
     with_title = {l.name: l for l in prs.slide_layouts
                   if any(ph.placeholder_format.type in (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE)
                          for ph in l.placeholders)}
     if layout is not None:
         if layout not in with_title:
-            sys.exit(f"レイアウト「{layout}」はタイトル枠を持つレイアウトに無い（候補: {', '.join(with_title)}）")
+            sys.exit(f"Layout '{layout}' not found among layouts with title frames (candidates: {', '.join(with_title)})")
         layout_name = layout
     else:
         layout_name = pick_body_layout(slides, with_title)
@@ -225,7 +230,7 @@ def measure(path, layout=None):
         for cx in root.iter(P + "cxnSp"):
             ln = cx.find(f"{P}spPr/{A}ln")
             ext = cx.find(f"{P}spPr/{A}xfrm/{A}ext")
-            if ln is None or ext is None or int(ext.get("cy")) != 0:   # 横の罫線だけ
+            if ln is None or ext is None or int(ext.get("cy")) != 0:   # Horizontal rules only
                 continue
             c = color_spec(ln)
             if c:
@@ -233,13 +238,13 @@ def measure(path, layout=None):
             if ln.get("w"):
                 rule_widths[round(int(ln.get("w")) / 12700, 2)] += 1
 
-    # ---- 文字の大きさ（本文＝最も多い。密＝その下で 5% 以上ある最大のもの。見出し＝本文より大きい太字で最も多いもの）
+    # ---- Font sizes (body = most frequent; dense = largest below body with >= 5% share; head = most frequent bold above body)
     total = sum(sizes.values()) or 1
     body_sz = top(sizes)
     smaller = sorted((s for s, n in sizes.items() if body_sz and s < body_sz and n / total >= 0.05), reverse=True)
     head_sz = top(collections.Counter({s: n for s, n in bold_sizes.items() if body_sz and body_sz < s <= body_sz * 2}))
 
-    # ---- 段組み（テキストボックスの過半が同じ lstStyle を持つなら、それを写す）
+    # ---- List styles (if majority of textboxes share the same lstStyle, mirror it)
     lst, bullet_lvl = None, None
     best = top(lst_styles, skip=("",))
     if best and lst_styles[best] / sum(lst_styles.values()) >= 0.3:
@@ -257,7 +262,7 @@ def measure(path, layout=None):
         masters = sorted(n for n in z.namelist() if re.match(r"ppt/slideMasters/slideMaster\d+\.xml$", n))
         master = z.read(masters[0]).decode("utf8", "ignore") if masters else ""
         layouts_xml = " ".join(z.read(n).decode("utf8", "ignore") for n in z.namelist()
-                               if n.startswith(("ppt/slideLayouts/slideLayout", "ppt/slideMasters/slideMaster")))
+                                if n.startswith(("ppt/slideLayouts/slideLayout", "ppt/slideMasters/slideMaster")))
     major = re.search(r'<a:majorFont><a:latin typeface="([^"]*)"', theme)
     minor = re.search(r'<a:minorFont><a:latin typeface="([^"]*)"', theme)
     page_number = ("layout" if 'type="slidenum"' in layouts_xml and slidenum_slides < len(slides) / 2
@@ -272,7 +277,7 @@ def measure(path, layout=None):
     tc = theme_colors(theme, master)
 
     def options(counter):
-        """役割ごとの候補（多い順に 3 つまで・テーマ色に読み替え・重複は 1 つに）"""
+        """Candidates per role (up to 3 in descending order, mapped to theme color, duplicates merged)"""
         out = []
         for spec in top(counter, skip=NEUTRAL, n=10):
             spec = to_theme(spec, tc)
@@ -314,21 +319,21 @@ def measure(path, layout=None):
 def summary(k):
     t, f, m = k["title"] or {}, k["fonts"], k["margin"]
     lines = [
-        f"資料: {k['source']}（{k['slide']['w']} × {k['slide']['h']} in・{k['tables']['slides']} 枚）",
-        f"レイアウト: {k['layout']}（使用数 {k['layouts_used']}）",
-        f"タイトル: x {t.get('x')} y {t.get('y')} 幅 {t.get('w')} 高さ {t.get('h')}・{t.get('size')}pt"
-        f"（既定 {t.get('default_size')}pt、実測 {t.get('sizes_seen')}）" if t else "タイトル: 枠のあるレイアウトが見つからない",
-        f"副題: {'y ' + str(k['subtitle']['y']) if k['subtitle'] else 'なし'}",
-        f"本文の範囲: x {m['x0']}〜{m['x1']}・上 {m['body_top']}・下 {m['bottom']}",
-        f"文字: 見出し {k['sizes']['head']}pt・本文 {k['sizes']['body']}pt・密 {k['sizes']['dense']}pt（実測 {k['sizes']['seen']}）",
-        f"書体: {'テーマ任せ（run に書かない）' if f['inherit'] else '直指定 ' + str(f['explicit'])}"
-        f"（直指定の割合 {f['explicit_share']}・テーマ {f['theme_major']} / {f['theme_minor']}）",
-        f"テキストボックス: 余白 {k['textbox']['insets']}・段組み {'あり（箇条書きは lvl=' + str(k['textbox']['bullet_level']) + '）' if k['textbox']['lst_style'] else 'なし'}",
-        f"罫線: {k['rule']['color']}・行間 {k['rule']['row']}pt・見出し下 {k['rule']['head']}pt",
-        f"表: 本文ページの表オブジェクト {k['tables']['native']} 個" + ("（テキストボックス＋罫線で組んでいる）" if not k['tables']['native'] else ""),
-        f"色: 強調 {k['colors']['emphasis']}・面 {k['colors']['panel']}・丸 {k['colors']['accent']}・✕ {k['colors']['ng']}",
-        f"色の候補（d.c(役割, 番号) で選ぶ）: " + "・".join(f"{r} {v}" for r, v in k["color_options"].items()),
-        f"ページ番号: {dict(layout='レイアウトが出す（スライドに置かない）', slide='スライドごとに置いている', none='なし')[k['page_number']]}",
+        f"Deck: {k['source']} ({k['slide']['w']} × {k['slide']['h']} in, {k['tables']['slides']} slides)",
+        f"Layout: {k['layout']} (usage count: {k['layouts_used']})",
+        f"Title: x {t.get('x')} y {t.get('y')} width {t.get('w')} height {t.get('h')}, {t.get('size')}pt"
+        f" (default {t.get('default_size')}pt, measured {t.get('sizes_seen')})" if t else "Title: No layout with title frame found",
+        f"Subtitle: {'y ' + str(k['subtitle']['y']) if k['subtitle'] else 'None'}",
+        f"Body area: x {m['x0']} - {m['x1']}, top {m['body_top']}, bottom {m['bottom']}",
+        f"Font sizes: Head {k['sizes']['head']}pt, Body {k['sizes']['body']}pt, Dense {k['sizes']['dense']}pt (measured {k['sizes']['seen']})",
+        f"Typeface: {'Theme default (not set on run)' if f['inherit'] else 'Explicitly specified ' + str(f['explicit'])}"
+        f" (explicit share: {f['explicit_share']}, theme: {f['theme_major']} / {f['theme_minor']})",
+        f"Textbox: Padding {k['textbox']['insets']}, List styling: {'Present (bullet lvl=' + str(k['textbox']['bullet_level']) + ')' if k['textbox']['lst_style'] else 'None'}",
+        f"Rules: {k['rule']['color']}, Row {k['rule']['row']}pt, Under heading {k['rule']['head']}pt",
+        f"Tables: Native table objects on body slides: {k['tables']['native']}" + (" (constructed using textboxes + rules)" if not k['tables']['native'] else ""),
+        f"Colors: Emphasis {k['colors']['emphasis']}, Panel {k['colors']['panel']}, Accent {k['colors']['accent']}, ✕ {k['colors']['ng']}",
+        f"Color options (select via d.c(role, index)): " + " | ".join(f"{r} {v}" for r, v in k["color_options"].items()),
+        f"Page numbers: {dict(layout='Provided by layout (do not place on slide)', slide='Placed on each slide', none='None')[k['page_number']]}",
     ]
     return "\n".join(lines)
 
@@ -351,7 +356,7 @@ def main():
     out = Path(out) if out else src.with_suffix(".skin.json")
     out.write_text(json.dumps(skin, ensure_ascii=False, indent=2), encoding="utf8")
     print(summary(skin))
-    print(f"\n→ {out}（目で見て直してから使う）")
+    print(f"\n→ {out} (visually verify and adjust before use)")
 
 
 if __name__ == "__main__":

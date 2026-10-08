@@ -1,9 +1,10 @@
-"""PowerPoint ファイルを python-pptx で開く。.pptx に加えて .potx（PowerPoint テンプレート）も開ける。
+"""Open PowerPoint files with python-pptx. Supports .potx (PowerPoint templates) in addition to .pptx.
 
-社内の書式は .potx（テンプレート）で配られることが多いが、python-pptx は .potx を
-「PowerPoint ファイルではない」として開けない。中身は .pptx と同じで、違いは
-[Content_Types].xml の本体の種類（template.main / presentation.main）だけなので、
-メモリ上でそこだけ読み替えて開く。元のファイルは書き換えない。保存すると通常の .pptx になる。
+Corporate templates are often distributed as .potx files, but python-pptx rejects .potx
+as "not a PowerPoint file". The internal structure is identical to .pptx, differing only
+in the main Content_Type ([Content_Types].xml: template.main vs presentation.main).
+This module replaces that MIME type in memory before loading. The source file on disk is never modified.
+Saving the presentation will yield a standard .pptx file.
 """
 import io
 import zipfile

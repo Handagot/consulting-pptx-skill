@@ -1,5 +1,5 @@
-// Chrome headless を DevTools Protocol で直接操作する最小ヘルパー（追加依存なし・Node 22+ の標準 WebSocket を使う）。
-// measure_deck.mjs / html_dump.mjs から使う。
+// Minimal helper to directly control headless Chrome via DevTools Protocol (zero extra dependencies; uses standard Node 22+ WebSocket).
+// Used by measure_deck.mjs / html_dump.mjs.
 import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,7 +14,7 @@ export async function openPage(file, { width = 1400, height = 900, scale = 1, me
     "C:/Program Files/Google/Chrome/Application/chrome.exe",
     "/usr/bin/google-chrome", "/usr/bin/chromium",
   ].find(existsSync);
-  if (!CHROME) throw new Error("Chrome が見つからない（CHROME_PATH で指定可）");
+  if (!CHROME) throw new Error("Chrome not found (can specify via CHROME_PATH)");
 
   const userDataDir = mkdtempSync(join(tmpdir(), "chr-deck-"));
   const port = 9222 + Math.floor(Math.random() * 1000);
@@ -62,11 +62,11 @@ export async function openPage(file, { width = 1400, height = 900, scale = 1, me
   ({ sessionId } = await send("Target.attachToTarget", { targetId, flatten: true }));
   await send("Page.enable");
   await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: scale, mobile: false });
-  // 印刷レイアウトで扱う（画面用のビューポート追従スケーラーの影響を受けない）
+  // Treat in print layout (unaffected by screen viewport responsive scalers)
   await send("Emulation.setEmulatedMedia", { media });
   await send("Page.navigate", { url: pathToFileURL(resolve(file)).href });
   for (let i = 0; i < 100 && !events.some((e) => e.method === "Page.loadEventFired"); i++) await delay(100);
-  await delay(1200); // フォント・画像
+  await delay(1200); // Wait for fonts and images
 
   const evaluate = async (fnOrExpr, arg) => {
     const expression = typeof fnOrExpr === "function"

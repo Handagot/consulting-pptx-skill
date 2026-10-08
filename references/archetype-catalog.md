@@ -1,91 +1,97 @@
-# 型カタログ（レイアウトの発想帳）: 62型の型ID・使いどころ・所在
+# Archetype Catalog (Design Idea Book): 62 Archetypes by ID, Use Case, and Source
 
-> **型は「合わせる対象」ではなく「見せ方を思いつくための引き出し」。** 規約の正典は `slide-rules.md` で、型はそれを効率よく満たすための道具にすぎない。ストーリーに合う型がなければ捨てて、パーツを組み替えて自由に組む。
+> **Archetypes are not rigid molds to force-fit; they are drawers of inspiration for presenting ideas.** The canonical source of slide rules is `slide-rules.md`, and archetypes are merely tools to satisfy those rules efficiently. If no archetype fits your storyline, discard them and assemble your slide freely from first principles.
 >
-> 読むタイミング: ストーリーラインの各行に「見せ方」を書くとき。毎回通読する必要はなく、目視で探すなら `assets/SlideCatalog_16x9.pdf`（基本パーツ集27枚＋追加パーツ集35枚を印刷したもの）のほうが速い。
+> When to read: When determining the visual layout for each item in your storyline. You do not need to read this from top to bottom every session; for visual browsing, `assets/SlideCatalog_16x9.pdf` (printed 62-page catalog of all base and additional components) is much faster.
 
-パーツは2ファイルに分かれる。どちらも 16:9・1パーツ=1スライドの HTML。番号を並べて `python3 scripts/new_deck.py --parts b01,m05,... -o mydeck.html` で1本に結合し、中身を差し替える（基本＝b番号、追加＝m番号）。
+Components are split into two standalone 16:9 HTML files (1 component = 1 slide). Select components by specifying IDs: `python3 scripts/new_deck.py --parts b01,m05,... -o mydeck.html` to generate a merged deck, then replace placeholder content (`b` numbers = base, `m` numbers = additional).
 
-| ファイル | 中身 | 使用頻度 |
+| File | Content | Frequency |
 | --- | --- | --- |
-| `templates/freeform_parts_16x9.html`（基本パーツ集） | 表紙・全体マップ・目次・章扉・矢羽・前提→帰結・軸のある表・主張パネル・評価表・分布図など27パーツ | 高い。まずここから |
-| `templates/freeform_parts_more_16x9.html`（追加パーツ集） | エグゼクティブサマリー・チャート系（積み上げ棒・ブリッジ・散布）・比較表・マトリクス・イシューツリー・ロードマップ・ガントなど35パーツ | 低い。基本で足りないとき |
+| `templates/freeform_parts_16x9.html` (Base Library) | 27 components: title page, overview map, TOC, section divider, chevrons, premise-to-conclusion, tables with axes, claim panels, evaluation matrices, distribution charts, etc. | High. Start here. |
+| `templates/freeform_parts_more_16x9.html` (Additional Library) | 35 components: executive summary, charts (stacked bar, waterfall, scatter), comparison tables, 2x2 matrix, issue tree, roadmap, Gantt, etc. | Medium. Use when base library is insufficient. |
 
-## 1. 基本パーツ集の27パーツ（型ID / 型名）
+---
 
-| # | 型ID | 型名 | 所在 |
+## 1. Base Component Library (27 Archetypes)
+
+| # | Archetype ID | Name | Source Location |
 | --- | --- | --- | --- |
-| 01 | `title_page` | 表紙 | 基本パーツ集 パーツ01 |
-| 02 | `overview_map` | 全体マップ | 基本パーツ集 パーツ02 |
-| 03 | `table_of_contents` | 目次 | 基本パーツ集 パーツ03 |
-| 04 | `section_divider` | 章扉 | 基本パーツ集 パーツ04 |
-| 05 | `chevron_steps` | 矢羽（プロセス・変遷） | 基本パーツ集 パーツ05 |
-| 06 | `premise_conclusion` | 前提→帰結の2カラム | 基本パーツ集 パーツ06 |
-| 07 | `stat_table_readout` | 大型数値の表＋読み取り | 基本パーツ集 パーツ07 |
-| 08 | `card_grid_2x2` | 並列カード 2×2 | 基本パーツ集 パーツ08 |
-| 09 | `axis_table` | 軸のある表 | 基本パーツ集 パーツ09 |
-| 10 | `back_cover` | 裏表紙 | 基本パーツ集 パーツ10 |
-| 11 | `claim_panel_figure` | 主張パネル＋図 | 基本パーツ集 パーツ11 |
-| 12 | `lever_effect_table` | 打ち手の効果表 | 基本パーツ集 パーツ12 |
-| 13 | `status_heatmap_comment` | 状態ヒートマップ＋右コメント | 基本パーツ集 パーツ13 |
-| 14 | `harvey_ball_table` | 充足度評価表（ハーベイボール） | 基本パーツ集 パーツ14 |
-| 15 | `dot_matrix_share` | 割合のドットマトリクス | 基本パーツ集 パーツ15 |
-| 16 | `progress_bubble_matrix` | 進捗バブル行列 | 基本パーツ集 パーツ16 |
-| 17 | `ranked_bar_annotated` | 分布の順位棒＋注記 | 基本パーツ集 パーツ17 |
-| 18 | `scatter_annotated` | 注記つき散布図 | 基本パーツ集 パーツ18 |
-| 19 | `pillars_foundation` | 柱＋土台 | 基本パーツ集 パーツ19 |
-| 20 | `opposing_chevrons` | 対向シェブロン | 基本パーツ集 パーツ20 |
-| 21 | `evidence_clip_grid` | 外部動向の根拠グリッド | 基本パーツ集 パーツ21 |
-| 22 | `proportional_circles` | 比例円の対比 | 基本パーツ集 パーツ22 |
-| 23 | `delta_bars_totals` | 増減の縦棒＋左右合計 | 基本パーツ集 パーツ23 |
-| 24 | `scenario_lines_cagr` | シナリオ線＋成長率チップ | 基本パーツ集 パーツ24 |
-| 25 | `research_basis` | 調査の土台 | 基本パーツ集 パーツ25 |
-| 26 | `issue_action_columns` | 課題と打ち手の2カラム | 基本パーツ集 パーツ26 |
-| 27 | `agenda_separator` | セパレーター（章扉＝アジェンダ再掲） | 基本パーツ集 パーツ27 |
+| 01 | `title_page` | Title Page | Base Library Part 01 |
+| 02 | `overview_map` | Overview Map | Base Library Part 02 |
+| 03 | `table_of_contents` | Table of Contents | Base Library Part 03 |
+| 04 | `section_divider` | Section Divider | Base Library Part 04 |
+| 05 | `chevron_steps` | Chevron Process / Progression | Base Library Part 05 |
+| 06 | `premise_conclusion` | Premise → Conclusion 2-Column | Base Library Part 06 |
+| 07 | `stat_table_readout` | Large Metric Table + Readout | Base Library Part 07 |
+| 08 | `card_grid_2x2` | 2×2 Card Grid | Base Library Part 08 |
+| 09 | `axis_table` | Table with Structured Axes | Base Library Part 09 |
+| 10 | `back_cover` | Back Cover | Base Library Part 10 |
+| 11 | `claim_panel_figure` | Key Claim Panel + Visual | Base Library Part 11 |
+| 12 | `lever_effect_table` | Strategic Levers & Impact Table | Base Library Part 12 |
+| 13 | `status_heatmap_comment` | Status Heatmap + Right Commentary | Base Library Part 13 |
+| 14 | `harvey_ball_table` | Harvey Ball Evaluation Matrix | Base Library Part 14 |
+| 15 | `dot_matrix_share` | Dot Matrix Distribution / Share | Base Library Part 15 |
+| 16 | `progress_bubble_matrix` | Progress Bubble Matrix | Base Library Part 16 |
+| 17 | `ranked_bar_annotated` | Ranked Bar Distribution + Callouts | Base Library Part 17 |
+| 18 | `scatter_annotated` | Annotated Scatter Plot | Base Library Part 18 |
+| 19 | `pillars_foundation` | Strategic Pillars & Foundation | Base Library Part 19 |
+| 20 | `opposing_chevrons` | Opposing Chevrons (Dual Forces) | Base Library Part 20 |
+| 21 | `evidence_clip_grid` | External Evidence / Market Trends Grid | Base Library Part 21 |
+| 22 | `proportional_circles` | Proportional Circle Comparison | Base Library Part 22 |
+| 23 | `delta_bars_totals` | Variance Bars + Totals | Base Library Part 23 |
+| 24 | `scenario_lines_cagr` | Scenario Trajectories + CAGR Chips | Base Library Part 24 |
+| 25 | `research_basis` | Research & Methodology Foundation | Base Library Part 25 |
+| 26 | `issue_action_columns` | Issues vs. Actions 2-Column | Base Library Part 26 |
+| 27 | `agenda_separator` | Agenda Tracker (Section Divider) | Base Library Part 27 |
 
-## 2. 追加パーツ集の35パーツ（型ID / 型名 / 使いどころ）
+---
 
-| # | 型ID | 型名 | 使いどころ | 所在 |
+## 2. Additional Component Library (35 Archetypes)
+
+| # | Archetype ID | Name | Best Use Case | Source Location |
 | --- | --- | --- | --- | --- |
-| 1 | `executive_summary` | エグゼクティブサマリー | 冒頭で結論と論点を一望させる場合 | 追加パーツ集 P.1 |
-| 2 | `evidence_basis` | 調査の土台 | この資料が何に基づくかを冒頭で示す場合 | 追加パーツ集 P.2 |
-| 3 | `big_stat_pair` | 大型数値の対比 | 大型数値2つで規模やインパクトを対比する場合 | 追加パーツ集 P.3 |
-| 4 | `kpi_dashboard` | KPI一覧 | 主要KPIを一覧で示す場合 | 追加パーツ集 P.4 |
-| 5 | `chart_insight` | 単一チャート＋含意 | 1つのチャートで主張を証明し、含意を添える場合 | 追加パーツ集 P.5 |
-| 6 | `stacked_bar` | 積み上げ棒 | 構成の変化を積み上げ棒で示す場合 | 追加パーツ集 P.6 |
-| 7 | `waterfall` | 寄与度ブリッジ | 増減の寄与をブリッジで示す場合 | 追加パーツ集 P.7 |
-| 8 | `true_waterfall` | 増減ブリッジ（厳密） | 起点から着地までの増減を厳密なブリッジで示す場合 | 追加パーツ集 P.8 |
-| 9 | `small_multiples` | 小図の並列比較 | 同じ図法を並べて切り口違いで比較する場合 | 追加パーツ集 P.9 |
-| 10 | `comparison_table` | 選択肢の比較表 | 複数の選択肢を評価軸で比較する場合 | 追加パーツ集 P.10 |
-| 11 | `scenario_table` | シナリオ比較表 | シナリオ別の前提と結果を並べる場合 | 追加パーツ集 P.11 |
-| 12 | `risk_table` | リスク一覧表 | リスク・兆候・打ち手を整理する場合 | 追加パーツ集 P.12 |
-| 13 | `horizontal_axis_table` | 横軸評価表 | 横軸に項目を並べて評価する場合 | 追加パーツ集 P.13 |
-| 14 | `heatmap_table` | ヒートマップ表 | 濃淡で強弱を一覧表示する場合 | 追加パーツ集 P.14 |
-| 15 | `matrix_2x2` | 2×2マトリクス | 2つの軸で位置づけを整理する場合 | 追加パーツ集 P.15 |
-| 16 | `process_matrix` | プロセス×観点の行列 | プロセスと観点の掛け合わせで整理する場合 | 追加パーツ集 P.16 |
-| 17 | `nested_row_matrix` | 入れ子行の行列 | 入れ子の行構造で階層を示す場合 | 追加パーツ集 P.17 |
-| 18 | `timeline_matrix` | 時系列マトリクス | 時系列と項目のマトリクスで示す場合 | 追加パーツ集 P.18 |
-| 19 | `theme_card_grid` | テーマカード | 複数のテーマをカードで並べる場合 | 追加パーツ集 P.19 |
-| 20 | `recommendation_pillars` | 提言の柱 | 複数の提言を柱立てで示す場合 | 追加パーツ集 P.20 |
-| 21 | `numbered_imperatives` | 番号つき打ち手 | やるべきことを番号付きで示す場合 | 追加パーツ集 P.21 |
-| 22 | `scr` | Situation・Complication・Resolution | Situation・Complication・Resolution（状況・難しさ・解決）の3段で語る場合 | 追加パーツ集 P.22 |
-| 23 | `issue_to_solution_map` | 課題と打ち手の対応 | 課題と解決策を対応付ける場合 | 追加パーツ集 P.23 |
-| 24 | `issue_cause_solution` | 課題→原因→解決 | 課題から原因、解決策へ流れで示す場合 | 追加パーツ集 P.24 |
-| 25 | `issue_tree` | イシューツリー | 課題をツリーで分解する場合 | 追加パーツ集 P.25 |
-| 26 | `current_target_state` | 現状と目指す姿 | 現状と目指す姿を対比する場合 | 追加パーツ集 P.26 |
-| 27 | `calc_flow` | 計算ロジックの流れ | 計算ロジックを式の流れで示す場合 | 追加パーツ集 P.27 |
-| 28 | `process_flow` | プロセスの段階 | プロセスの流れを段階で示す場合 | 追加パーツ集 P.28 |
-| 29 | `cycle` | 循環サイクル | 循環するサイクル構造を示す場合 | 追加パーツ集 P.29 |
-| 30 | `chevron_rail` | 矢羽の段階（全体像の見出し） | 段階の進行を矢羽（シェブロン）で示す場合 | 追加パーツ集 P.30 |
-| 31 | `chevron_value_chain` | バリューチェーン | バリューチェーン全体を示す場合 | 追加パーツ集 P.31 |
-| 32 | `decision_fork` | 分岐と判断 | 分岐する選択肢と判断を示す場合 | 追加パーツ集 P.32 |
-| 33 | `roadmap` | ロードマップ | 実行ロードマップを示す場合 | 追加パーツ集 P.33 |
-| 34 | `gantt` | ガントチャート | スケジュールをガントチャートで示す場合 | 追加パーツ集 P.34 |
-| 35 | `decision_page` | 意思決定ページ | 意思決定を求める場合 — 決めること・前提・依頼 | 追加パーツ集 P.35 |
+| 1 | `executive_summary` | Executive Summary | Providing an executive birds-eye view of conclusions and core issues at the outset | Additional Library P. 1 |
+| 2 | `evidence_basis` | Research Foundation | Establishing what datasets, interviews, or factual foundation the deck rests on | Additional Library P. 2 |
+| 3 | `big_stat_pair` | Big Stat Comparison | Contrasting scale or impact using two prominent metrics | Additional Library P. 3 |
+| 4 | `kpi_dashboard` | KPI Dashboard | Displaying key operational or financial metrics at a glance | Additional Library P. 4 |
+| 5 | `chart_insight` | Single Chart + Strategic Implications | Proving a core thesis with a single chart paired with qualitative implications | Additional Library P. 5 |
+| 6 | `stacked_bar` | Stacked Bar Breakdown | Showing shifts in composition or mix over time | Additional Library P. 6 |
+| 7 | `waterfall` | Contribution Bridge / Waterfall | Illustrating driver contributions to overall growth or variance | Additional Library P. 7 |
+| 8 | `true_waterfall` | Full Variance Bridge | Walking step-by-step from baseline to landing with exact positives/negatives | Additional Library P. 8 |
+| 9 | `small_multiples` | Small Multiples Comparison | Comparing different segments or regions using identical visualization schemes | Additional Library P. 9 |
+| 10 | `comparison_table` | Multi-Option Evaluation Matrix | Comparing multiple strategic alternatives against weighted evaluation criteria | Additional Library P. 10 |
+| 11 | `scenario_table` | Scenario Comparison Table | Comparing key assumptions and expected outcomes across multiple scenarios | Additional Library P. 11 |
+| 12 | `risk_table` | Risk Assessment & Mitigation Matrix | Structuring identified risks, leading indicators, and mitigations | Additional Library P. 12 |
+| 13 | `horizontal_axis_table` | Horizontal Axis Evaluation Table | Evaluating items mapped along a horizontal progression or continuum | Additional Library P. 13 |
+| 14 | `heatmap_table` | Heatmap Matrix | Showing relative intensity or performance across dimensions via color density | Additional Library P. 14 |
+| 15 | `matrix_2x2` | 2×2 Strategic Matrix | Positioning items, competitors, or initiatives across two strategic dimensions | Additional Library P. 15 |
+| 16 | `process_matrix` | Process × Perspective Matrix | Cross-analyzing process stages against functional perspectives or criteria | Additional Library P. 16 |
+| 17 | `nested_row_matrix` | Nested Row Hierarchy Matrix | Showing multi-level hierarchical structures within categorical rows | Additional Library P. 17 |
+| 18 | `timeline_matrix` | Timeline Matrix | Mapping strategic workstreams and initiatives across temporal phases | Additional Library P. 18 |
+| 19 | `theme_card_grid` | Theme Card Grid | Grouping initiatives or insights into structured thematic cards | Additional Library P. 19 |
+| 20 | `recommendation_pillars` | Recommendation Pillars | Organizing strategic proposals into distinct, parallel pillar structures | Additional Library P. 20 |
+| 21 | `numbered_imperatives` | Numbered Strategic Imperatives | Presenting prioritized actions or imperatives in clear sequential order | Additional Library P. 21 |
+| 22 | `scr` | Situation, Complication, Resolution | Structuring narrative context using the 3-tier SCR framework | Additional Library P. 22 |
+| 23 | `issue_to_solution_map` | Issue-to-Solution Mapping | Directly pairing identified operational challenges with dedicated solutions | Additional Library P. 23 |
+| 24 | `issue_cause_solution` | Issue -> Root Cause -> Solution | Illustrating the end-to-end diagnostic and resolution logic flow | Additional Library P. 24 |
+| 25 | `issue_tree` | Issue Tree | Deconstructing an overarching business challenge into MECE components | Additional Library P. 25 |
+| 26 | `current_target_state` | Current vs. Target State | Contrasting the baseline As-Is against the future To-Be state | Additional Library P. 26 |
+| 27 | `calc_flow` | Calculation Logic Flow | Visualizing formulaic logic and financial / operational value drivers | Additional Library P. 27 |
+| 28 | `process_flow` | Process Flow Stages | Depicting step-by-step operational workflows and procedural stages | Additional Library P. 28 |
+| 29 | `cycle` | Closed-Loop Cycle | Depicting virtuous cycles, flywheel dynamics, or iterative feedback loops | Additional Library P. 29 |
+| 30 | `chevron_rail` | Chevron Rail Stages | Showing progression through high-level phases using a top-level chevron rail | Additional Library P. 30 |
+| 31 | `chevron_value_chain` | Value Chain Chevrons | Displaying an end-to-end industry or enterprise value chain | Additional Library P. 31 |
+| 32 | `decision_fork` | Decision Fork | Illustrating branching decision points, alternatives, and selection criteria | Additional Library P. 32 |
+| 33 | `roadmap` | Implementation Roadmap | Mapping long-term strategic execution across milestones and workstreams | Additional Library P. 33 |
+| 34 | `gantt` | Gantt Chart | Visualizing detailed project schedules, dependencies, and delivery windows | Additional Library P. 34 |
+| 35 | `decision_page` | Executive Decision Page | Formally requesting executive sign-off: decision items, premises, and actions | Additional Library P. 35 |
 
-## 3. 使い方
+---
 
-- 各 section の h1 は型名を表示しているだけで、実デッキではストーリーラインから起こした主張文に差し替える（slide-rules §2.8）。プレースホルダー（`Text N` / `ラベル N` / `YYYY`）は1つも残さない（check_deck が FAIL にする）。
-- 配色・書体は両ファイルとも `<style>` 冒頭の `:root` トークン（warm 既定）。片方を変えたらもう片方も揃える。
-- 手でコピーして組む場合、追加パーツ集の section はそのCSSも一緒に要る。`new_deck.py` は両方のCSSをそれぞれ `.s` / `.slide` 配下にスコープして結合するので、混在しても `.bar` のような同名クラスが衝突しない。
-- 旧 SlideSpec パイプライン（JSON → 編集可能PPTX）は git タグ `pipeline-archived` の時点のリポジトリに残してある。編集可能PPTXが必要になったときだけ参照する。
+## 3. Usage Guidelines
+
+- The `h1` in each template section simply displays the archetype name. In production decks, overwrite every `h1` with an assertive takeaway statement derived from your storyline (slide-rules §2.8). Never leave template placeholders (`Text N`, `Label N`, `YYYY`) in your deck (`check_deck.py` will report a FAIL).
+- Default colors and fonts are identical across both files, configured via `:root` tokens (warm executive default). If adjusting brand tokens, keep both files aligned.
+- When assembling by hand, remember that sections from the additional library require their corresponding CSS. `scripts/new_deck.py` handles this automatically by scoping each library's CSS under `.s` and `.slide`, ensuring that shared class names like `.bar` never collide.
+- The archived SlideSpec pipeline (JSON to editable PPTX) is preserved at git tag `pipeline-archived` for historical reference.

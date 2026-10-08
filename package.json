@@ -1,7 +1,7 @@
 {
   "name": "consulting-pptx-skill",
   "private": true,
-  "description": "HTML デッキの実レンダリング検査（scripts/check_layout.mjs）に使う playwright だけを依存に持つ",
+  "description": "Dependencies limited to Playwright for live HTML deck rendering checks (scripts/check_layout.mjs)",
   "scripts": {
     "setup": "npm install && npx playwright install chromium",
     "check:layout": "node scripts/check_layout.mjs"

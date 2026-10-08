@@ -1,17 +1,17 @@
-## 背景
-<!-- 何に困っていたか。不具合なら再現手順・エラー文、規約なら受けた指摘 -->
+## Context
+<!-- What was the problem? If a bug, include reproduction steps and error messages. If a rule, describe the review feedback received. -->
 
-## 変更
-<!-- 何をどう変えたか。1 PR 1 目的 -->
+## Changes
+<!-- What changed and how? Keep to 1 PR = 1 objective. -->
 
-## 確認
-- [ ] `python3 -m unittest discover -s tests` が通る
-- [ ] 規約・機械チェックを足した場合: 直していない版で FAIL、直した版で通るテストを足した（測れない指摘なら理由を書く）
-- [ ] 手順・使い方を変えた場合: SKILL.md／README.md／slide-rules.md を揃えた
-- [ ] 顧客名・案件コード・金額・担当者名・社内URL・実案件のファイル・skin.json を、差分にもコミットメッセージにも PR 説明にも含めていない（CONTRIBUTING「PR に入れないもの」1）
-- [ ] 1 社の好み・ブランド規定・理由の書けない規則を本体に入れていない（組織固有なら `local/` へ。同 2）
-- [ ] 既定を変える規則は、既定・例外の条件・例外でも守る範囲の 3 点で書いた
-- [ ] 見た目に関わる場合: 目視した結果（PDF・画像）を下に書いた
+## Verification
+- [ ] `python3 -m unittest discover -s tests` passes
+- [ ] If adding a design rule or automated check: added test cases failing on the unfixed version and passing on the fixed version (if unmeasurable, stated rationale)
+- [ ] If modifying procedures or workflows: synchronized SKILL.md, README.md, and slide-rules.md
+- [ ] Verified that client names, deal codes, financial amounts, employee names, internal URLs, actual deck files, and skin.json are not included in diffs, commit messages, or PR descriptions (CONTRIBUTING "What NOT to Include" #1)
+- [ ] Verified that single-organization preferences, proprietary brand rules, or unexplainable rules are not placed upstream (kept in `local/` if organization-specific; CONTRIBUTING #2)
+- [ ] If altering default behavior: formulated rule with default, exception conditions, and boundaries to maintain during exceptions
+- [ ] If visual changes were made: documented visual QA results (PDF / renders) below
 
-## 関連
-<!-- 関連する Issue・PR。他の PR の上に積んでいる場合はその番号 -->
+## Related
+<!-- Related Issues or PRs. If stacked on another PR, cite its number. -->

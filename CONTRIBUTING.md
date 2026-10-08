@@ -1,97 +1,98 @@
-# コントリビューションの手引き
+# Contributing Guide
 
-このリポジトリへの Issue・Pull Request（PR）を歓迎します。中心は `references/slide-rules.md` の規約と、それを測る機械チェックです。PR は次の流れで出してください。
+Issues and Pull Requests (PRs) to this repository are warmly welcomed. The core of this project is the slide design rulebook in `references/slide-rules.md` and the automated checks that enforce it. Please submit PRs following the process below.
 
-## 出す前に
+## Before Submitting
 
-- **1 つの PR には 1 つの目的だけ**を入れる（バグ修正と規約追加を混ぜない）。関連する変更を順に出すときは、後の PR を前の PR の上に積み、説明にその旨を書く
-- 規約の考え方を変える・型を大きく足すなど、方針に関わる変更は先に Issue で相談する
-- 自分の fork でブランチを切る。名前は `feat/…`（機能）・`fix/…`（不具合）・`docs/…`（文書）・`chore/…`（雑務）を目安にする
+- **Keep each PR focused on a single objective** (do not mix bug fixes with new design rules). When submitting a series of related changes, stack subsequent PRs on top of preceding ones and note this clearly in the description.
+- For architectural changes—such as redefining core philosophy or adding substantial archetypes—open an Issue to discuss before implementing.
+- Create a feature branch on your fork using standard prefixes: `feat/...` (features), `fix/...` (bug fixes), `docs/...` (documentation), or `chore/...` (maintenance).
 
-## 変更の種類ごとの約束
+## Guidelines by Change Type
 
-### 規約（slide-rules.md）を足す・直す
+### Adding or Updating Design Rules (`slide-rules.md`)
 
-**指摘は規約 1 行と機械チェックの両方にする**（slide-rules §8）。測れる指摘（数・位置・語・空き）は次の 3 点を同じ PR に入れる。
+**Every piece of feedback must result in both a 1-line rule and an automated check** (slide-rules §8). For measurable rules (counts, positions, terms, whitespace), include all three of the following in the same PR:
 
-1. `references/slide-rules.md` に 1 行足す
-2. `scripts/check_deck.py`／`scripts/check_layout.mjs` に判定を足す
-3. `tests/` に「直していない版で FAIL が出る」「直した版で出ない」の 2 件を足す
+1. Add a 1-line rule to `references/slide-rules.md`.
+2. Add a check condition to `scripts/check_deck.py` or `scripts/check_layout.mjs`.
+3. Add two test cases to `tests/`: one verifying a `FAIL` on an unfixed version, and one verifying a pass on the fixed version.
 
-測れない指摘（言い回し・論理）は規約の 1 行だけでよい。その場合は PR に「測れない理由」を 1 行書く。
+For qualitative feedback that cannot be measured automatically (phrasing nuances, logical leaps), adding a 1-line rule to `slide-rules.md` is sufficient. In that case, add a 1-line explanation to the PR stating why it cannot be checked programmatically.
 
-### スクリプト（scripts/）を直す
+### Updating Scripts (`scripts/`)
 
-- `check_deck.py`（HTML）と `new_deck.py` は **Python 標準ライブラリだけ**で動く状態を保つ。新しい依存が要るときは、PPTX 側など使う場面に閉じて import し、README のセットアップ欄に書く
-- 不具合の修正には、修正前に失敗し修正後に通るテストを付ける
+- Keep `check_deck.py` (HTML checks) and `new_deck.py` running on the **Python standard library only**. When an external dependency is necessary (such as `python-pptx` for PPTX handling), isolate the import to that specific code path and document it in the README setup section.
+- For bug fixes, include a test that fails before the fix and passes after it.
 
-### パーツ集・型カタログを直す
+### Updating Templates and the Archetype Catalog
 
-- 色・書体は両パーツ集（`templates/freeform_parts_16x9.html`・`freeform_parts_more_16x9.html`）の `:root` を揃える
-- 型を足した・見た目を変えたときは `references/archetype-catalog.md` も更新する。`assets/SlideCatalog_16x9.pdf` の再生成が要る場合は PR にそう書く
+- When modifying colors or fonts, keep `:root` tokens synchronized across both template libraries (`templates/freeform_parts_16x9.html` and `templates/freeform_parts_more_16x9.html`).
+- When adding archetypes or altering layout structures, update `references/archetype-catalog.md` as well. If `assets/SlideCatalog_16x9.pdf` requires regeneration, state so in the PR description.
 
-### 文書
+### Updating Documentation
 
-- 手順や使い方を変えたら、`SKILL.md`・`README.md`・`slide-rules.md` の該当箇所を**同じ PR で**揃える。スキルは SKILL.md を読んで動くので、古い説明が残ると次のセッションで古い手順が使われる
+- Whenever workflows or instructions change, update `SKILL.md`, `README.md`, and `slide-rules.md` in the **same PR**. The AI operates by reading `SKILL.md`; if outdated instructions remain, obsolete workflows will be used in subsequent sessions.
 
-## ライセンスと商標
+## License and Trademarks
 
-- 貢献したコード・文書は、本リポジトリと同じ [MIT License](LICENSE) で提供されたものとして扱います（inbound = outbound）。PR を出すことで、その内容を MIT License で公開することに同意したものとみなします
-- 商標（「Carnot」「Carnot AI」「Jinba」とロゴ）の扱いは [TRADEMARK.md](TRADEMARK.md) に従います。フォーク・改変版には当社の商標を含む名称を付けないでください
+- Contributed code and documentation are accepted under the [MIT License](LICENSE) (inbound = outbound). By opening a PR, you agree to license your contribution under the MIT License.
+- Trademarks ("Carnot", "Carnot AI", "Jinba", and logos) are governed by [TRADEMARK.md](TRADEMARK.md). Forks and derivative works must not use names containing our company's trademarks.
 
-## PR に入れないもの
+## What NOT to Include in PRs
 
-このリポジトリは公開されている。**差分・コミットメッセージ・ブランチ名・PR のタイトルと説明・テストの例文**のすべてが外から読める前提で書く。一度 push した語は履歴に残り、消すには全履歴の書き換えが要る。
+This repository is publicly accessible. **All diffs, commit messages, branch names, PR titles and descriptions, and test fixture strings** must be written with the understanding that they are visible to the world. Words pushed to git history remain in the log permanently; expunging them requires rewriting the entire history.
 
-### 1. 外に出してはいけない情報
+### 1. Confidential and Proprietary Information
 
-- 顧客名・取引先名・案件コード・金額・契約条件・担当者名・社内の URL やツール名・社内の呼び名
-- 実案件の資料（.pptx／.potx）、そのスクリーンショット、`measure_deck.py` が出す `skin.json`（元ファイル名とテーマ色を含む）
-- 実案件の文言をそのまま使った例文・テストデータ（「承認待ちは平均3日」のような架空の例に置き換える）
-- PR の説明に実例を載せるときは「社内テンプレート A」「ある製造業の提案書」のように匿名にする。**PR のタイトルやブランチ名にも**消したい語を書かない
-- テストに PowerPoint ファイルが要るときは、テストの中で python-pptx の白紙テンプレートから作る（`tests/test_house_pptx.py` の `make_house` を参照）
+- Customer names, partner names, deal codes, financial amounts, contract terms, employee names, internal URLs, internal tool names, and company-specific jargon.
+- Actual engagement presentations (`.pptx` / `.potx`), screenshots of proprietary material, and `skin.json` files generated by `measure_deck.py` (which contain source file paths and theme colors).
+- Real project text in examples or test data (replace with fictional placeholders like "approval waiting time averages 3 days").
+- When illustrating real examples in PR descriptions, anonymize them (e.g., "Internal Template A", "a proposal for a manufacturing client"). **Never include confidential terms in branch names or PR titles.**
+- When a test requires a PowerPoint file, generate it in-memory within the test from a blank python-pptx template (see `make_house` in `tests/test_house_pptx.py`).
 
-### 2. 汎用性が落ちるもの
+### 2. Low-Generality Content
 
-本体の規約は「どの組織の読み手にも当てはまる」ものだけ。次は本体に入れず、`local/`（git 管理外）に置く。
+Core rules must apply universally to any audience in any organization. Place the following in `local/` (untracked in git) rather than upstream:
 
-- 1 社の好み・ブランド規定（色・書体・ブレット記号・ロゴの位置）
-- 特定の業界・資料の種類でしか効かない作法（ただし条件を書けば入れてよい。下記）
-- 「上司に言われたから」で理由が書けない規則
-- 特定の製品・ツール・テンプレート名を前提にした手順
+- Company-specific preferences or brand guidelines (colors, fonts, bullet characters, logo placements).
+- Conventions that apply only to a specific niche industry or deck type (unless written with clear qualifying conditions; see below).
+- Rules where the rationale cannot be articulated beyond "because our manager asked for it".
+- Procedures assuming specific proprietary tools or internal templates.
 
-本体に入れる規則の目安:
-- **理由が 1 行で書ける**（読み手がどう困るか）
-- **既定を変える規則は条件付きにする**。「〜のときは〜してよい」と、既定・例外の条件・例外でも守る範囲の 3 点を書く（`slide-rules.md` 冒頭「規則の強さ」）。一律の禁止や一律の許可に書き換えない
-- **測れるなら測る**。数・位置・語・空きで判定できる規則は `check_deck` と、修正前に FAIL・修正後に通るテストを付ける
-- 既存の規則と矛盾しないか、節番号を挙げて確かめる。矛盾するなら、どちらを残すかを PR で先に問う
+Guidelines for upstream rules:
+- **State the rationale in one line** (explaining how the reader would be hindered without it).
+- **Make default-altering rules conditional.** Write the rule with three elements: the default, the condition for exceptions, and the boundaries to respect even during exceptions ("When X, you may do Y, provided that Z"; see `slide-rules.md` preamble). Do not turn rules into blanket prohibitions or blanket permissions.
+- **Automate if measurable.** If a rule can be evaluated by count, position, keyword, or whitespace, add a check to `check_deck.py` with passing/failing tests.
+- Cross-reference existing section numbers to ensure the new rule does not conflict. If there is a contradiction, discuss in the PR which rule takes precedence.
 
-### 3. AI エージェントに PR を作らせるとき
+### 3. When Having an AI Agent Create a PR
 
-- この手引きを読ませ、上の 1・2 を守らせる。特に **1 は差分だけでなくコミットメッセージ・PR 説明にも**効く
-- 作業中の会話に出た顧客名・案件の文脈が差分や説明に混ざりやすい。push の前に、差分と PR 説明を `local/forbid.txt`（あれば）で検索する
-- 「レビューで受けた指摘」を規約にするときは、指摘の文言をそのまま貼らず、どの組織でも通じる言い方に一般化する
+- Have the AI read this guide and adhere to points 1 and 2 above. **Point 1 applies to commit messages and PR descriptions as well as diffs.**
+- Client names and project context discussed in conversation easily leak into diffs and descriptions. Before pushing, search the diff and PR description against `local/forbid.txt` (if present).
+- When turning review feedback into rules, do not paste raw feedback verbatim; generalize it into language that applies to any organization.
 
-## 確認してから出す
+## Pre-Submission Verification
 
 ```bash
-python3 -m unittest discover -s tests      # すべて通る（playwright の要るテストは未導入ならスキップ）
-python3 scripts/check_deck.py tests/fixtures/good_deck.html   # 機械チェックを触ったとき
+python3 -m unittest discover -s tests                      # All tests must pass (playwright tests skipped if not installed)
+python3 scripts/check_deck.py tests/fixtures/good_deck.html  # When modifying automated checks
 ```
 
-見た目に関わる変更は、PDF やページ画像で目視した結果を PR に書く。
+For visual changes, document the visual QA findings (PDF or page renders) in the PR description.
 
-## コミットメッセージ
+## Commit Messages
 
-日本語で、1 行目に「何をするか」、本文に「なぜか（困っていた現象・再現手順）」と「どう直したか」を書く。
+Write concise, descriptive commit messages. Provide a summary on the first line, followed by the rationale (problem encountered, reproduction) and resolution in the body:
 
 ```
-measure_deck: 見本が 1 枚ずつのテンプレートでも本文のレイアウトを選ぶ
+measure_deck: Select body layout even when template has one sample slide per layout
 
-表紙・章扉・本文を 1 枚ずつ並べた見本ではレイアウトの使用回数が同点になり、
-表紙が本文として選ばれていた。同点のときは中央タイトルでない・後ろで使われる方を選ぶ。
+In templates with one sample slide each for title, divider, and body, layout usage counts tied,
+causing the title layout to be chosen as body. Break ties by preferring non-centered title layouts
+that appear later in slide order.
 ```
 
-## PR の説明
+## PR Description
 
-テンプレート（`.github/pull_request_template.md`）に沿って、背景・変更・確認・関連 PR を書く。AI エージェントに PR を作らせる場合も、この手引きと同じ内容を守らせる。
+Follow the template (`.github/pull_request_template.md`), describing Context, Changes, Verification, and Related Links. When instructing an AI agent to open a PR, ensure it follows these same guidelines.

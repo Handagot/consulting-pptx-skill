@@ -1,9 +1,9 @@
-"""既存の資料へ差し込むページ（measure_deck / deck_pptx / check_deck --house・--xml-only）の自己テスト。
+"""Self-test for slides inserted into existing presentations (measure_deck / deck_pptx / check_deck --house / --xml-only).
 
-土台にする「既存の資料」は python-pptx の白紙テンプレートからその場で作る（リポジトリに pptx を置かない）。
-test_checks.py と同じく、直していない版で FAIL が出ること・直した版で出ないことを 1 件ずつ確かめる。
+The base "existing presentation" is generated on the fly from python-pptx's blank template (no pptx stored in repo).
+Like test_checks.py, verifies one-by-one that uncorrected versions trigger FAIL while corrected versions pass.
 
-  python3 -m unittest discover -s tests        # python-pptx が無ければこのファイルは飛ばされる
+  python3 -m unittest discover -s tests        # Skipped if python-pptx is not installed
 """
 import json
 import subprocess
@@ -26,7 +26,7 @@ except ImportError:
 
 
 def make_house(path):
-    """書体はテーマ任せ・表は罫線・本文 14pt・見出し 20pt 太字、という作りの資料を 4 枚ぶん作る。"""
+    """Generate 4 slides mimicking a house presentation: theme-default fonts, ruled tables, 14pt body, 20pt bold headings."""
     from pptx import Presentation
     from pptx.dml.color import RGBColor
     from pptx.enum.shapes import MSO_CONNECTOR
@@ -35,7 +35,7 @@ def make_house(path):
     prs = Presentation()
     prs.slide_width, prs.slide_height = 12192000, 6858000
     layout = next(l for l in prs.slide_layouts if l.name == "Title Only")
-    title = layout.placeholders[0]   # 白紙テンプレートは 4:3 の位置のままなので、16:9 の幅に広げる
+    title = layout.placeholders[0]   # Blank template is in 4:3 position, widen to 16:9
     title.left, title.top, title.width, title.height = Inches(0.5), Inches(0.3), Inches(12.33), Inches(0.9)
     for n in range(4):
         s = prs.slides.add_slide(layout)
@@ -47,7 +47,7 @@ def make_house(path):
             body = s.shapes.add_textbox(Inches(0.5), Inches(2.2 + 0.6 * i), Inches(8), Inches(0.4))
             r = body.text_frame.paragraphs[0].add_run()
             r.text, r.font.size = "本文の行は 14pt で、書体を指定していない", Pt(14)
-            if i:   # 強調は 2 色を使い分ける。accent2 と同じ HEX（C0504D）を多めに、テーマに無い HEX（2E8B57）を少なめに
+            if i:   # Differentiate 2 emphasis colors: more accent2 HEX (C0504D), fewer non-theme HEX (2E8B57)
                 r = body.text_frame.paragraphs[0].add_run()
                 r.text, r.font.size = ("強調の語" if i == 1 else "別の強調"), Pt(14)
                 r.font.color.rgb = RGBColor(0xC0, 0x50, 0x4D) if i == 1 or n < 2 else RGBColor(0x2E, 0x8B, 0x57)
@@ -62,7 +62,7 @@ def check(path, *extra):
 
 
 def patched(src, dst, old, new, part="ppt/slides/slide1.xml"):
-    """PPTX の中の 1 か所だけを書き換えた写しを作る（直していない版を作るため）。"""
+    """Create a copy of PPTX with only 1 modification (to construct uncorrected versions)."""
     with zipfile.ZipFile(src) as zin, zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as zout:
         for item in zin.infolist():
             data = zin.read(item.filename)
@@ -73,7 +73,7 @@ def patched(src, dst, old, new, part="ppt/slides/slide1.xml"):
     return dst
 
 
-@unittest.skipUnless(HAS_PPTX, "pip3 install python-pptx で実行される")
+@unittest.skipUnless(HAS_PPTX, "Executed when python-pptx is installed")
 class HouseDeck(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -99,28 +99,28 @@ class HouseDeck(unittest.TestCase):
         self.assertEqual(k["layout"], "Title Only")
         self.assertTrue(k["fonts"]["inherit"])
         self.assertEqual((k["sizes"]["body"], k["sizes"]["head"]), (14.0, 20.0))
-        # 罫線は HEX（808080）で書かれているが、テーマの bg1 を 50% 暗くした色と一致するのでテーマ色で持つ
+        # Rules are written in HEX (808080), but match 50% darker bg1 in theme, so stored as theme color
         self.assertEqual((k["rule"]["color"], k["rule"]["row"], k["rule"]["head"]), ("bg1|lumMod=50000", 0.5, 1.0))
         self.assertEqual(k["tables"]["native"], 0)
         self.assertEqual((k["margin"]["x0"], k["margin"]["x1"]), (0.5, 12.83))
 
     def test_pages_have_no_house_slides_and_pass(self):
         from pptx import Presentation
-        self.assertEqual(len(Presentation(str(self.pages)).slides), 2)   # 土台の 4 枚は入らない
+        self.assertEqual(len(Presentation(str(self.pages)).slides), 2)   # Base 4 slides are excluded
         code, fails = check(self.pages, "--house", str(self.skin_path))
         self.assertEqual((code, fails), (0, []))
 
     def test_pages_keep_fonts_and_tables_as_the_house_does(self):
         with zipfile.ZipFile(self.pages) as z:
             xml = "".join(z.read(n).decode("utf8") for n in z.namelist() if n.startswith("ppt/slides/slide"))
-        self.assertNotIn("<a:latin", xml)   # 書体は run に書かない
-        self.assertNotIn("<a:tbl>", xml)    # 表はテキストボックス＋罫線
-        self.assertNotIn('<a:srgbClr val="808080"/>', xml)   # 罫線は資料の色を、テーマ色として書く
+        self.assertNotIn("<a:latin", xml)   # Font is not set on run
+        self.assertNotIn("<a:tbl>", xml)    # Table is textbox + rules
+        self.assertNotIn('<a:srgbClr val="808080"/>', xml)   # Rule uses deck color as theme color
         self.assertIn('<a:schemeClr val="bg1"><a:lumMod val="50000"/></a:schemeClr>', xml)
 
     def test_colors_keep_several_options_and_follow_the_theme(self):
         k = self.skin
-        self.assertEqual(k["color_options"]["emphasis"], ["accent2", "2E8B57"])   # 多い順。テーマ色と一致する HEX は読み替える
+        self.assertEqual(k["color_options"]["emphasis"], ["accent2", "2E8B57"])   # Descending frequency; mapped to theme color
         self.assertEqual(k["colors"]["emphasis"], "accent2")
         self.assertEqual(k["colors"]["ng"], "FF0000")
         from deck_pptx import Deck
@@ -131,8 +131,8 @@ class HouseDeck(unittest.TestCase):
         from measure_deck import to_theme
         theme = {"tx1": "000000", "bg1": "FFFFFF", "accent1": "4F81BD"}
         self.assertEqual(to_theme("4F81BD", theme), "accent1")
-        self.assertEqual(to_theme("DCE6F2", theme), "accent1|lumMod=20000|lumOff=80000")   # 「明るく 80%」
-        self.assertEqual(to_theme("123456", theme), "123456")                              # テーマに無い色はそのまま
+        self.assertEqual(to_theme("DCE6F2", theme), "accent1|lumMod=20000|lumOff=80000")   # "Lighter 80%"
+        self.assertEqual(to_theme("123456", theme), "123456")                              # Non-theme colors kept as-is
         self.assertEqual(to_theme("accent3", theme), "accent3")
 
     def test_ng_color_comes_from_skin(self):
@@ -160,9 +160,9 @@ class HouseDeck(unittest.TestCase):
         d = Deck()
         s = d.slide("色の指定を誤ったら、ファイルを書く前に止まる")
         with self.assertRaises(ValueError):
-            d.panel(s, 1, 2, 3, 1, fill="FFC000|lumMod=20000|lumOff")   # 変換の値が無い
+            d.panel(s, 1, 2, 3, 1, fill="FFC000|lumMod=20000|lumOff")   # Missing conversion value
         with self.assertRaises(ValueError):
-            d.panel(s, 1, 2, 3, 1, fill="accent9")                      # 無いテーマ色
+            d.panel(s, 1, 2, 3, 1, fill="accent9")                      # Non-existent theme color
 
     def test_explicit_font_fires_only_with_house(self):
         bad = patched(self.pages, self.d / "bad_font.pptx", 'sz="1400">', 'sz="1400"><a:latin typeface="Yu Gothic"/>')
@@ -176,7 +176,7 @@ class HouseDeck(unittest.TestCase):
         self.assertTrue(any("タイトルがプレースホルダーに入っていない" in f for f in fails), fails)
 
     def test_dash_join_split_across_runs_is_detected(self):
-        """「ラベル」「 — 」「説明」と run が分かれていても、段落単位で見てダッシュ連結を WARN する。"""
+        """Even if runs are split into 'Label', ' — ', 'Description', WARN dash concatenation at paragraph level."""
         from pptx import Presentation
         from pptx.util import Inches, Pt
         prs = Presentation(str(self.house))
@@ -191,7 +191,7 @@ class HouseDeck(unittest.TestCase):
         self.assertIn("ダッシュ", r.stdout)
 
     def test_potx_template_is_measured_and_built_on(self):
-        """社内書式が .potx（PowerPoint テンプレート）で配られても、測る・組む・検査するが通る。"""
+        """Verify measuring, building, and checking work even when house styles are distributed as .potx (PowerPoint template)."""
         from deck_pptx import Deck
         from measure_deck import measure
         potx = patched(self.house, self.d / "house.potx",
@@ -209,7 +209,7 @@ class HouseDeck(unittest.TestCase):
         self.assertEqual(check(potx, "--xml-only"), (0, []))
 
     def test_body_layout_is_found_in_a_one_of_each_sample(self):
-        """表紙・章扉・本文を 1 枚ずつ並べた見本でも、本文のレイアウトを選ぶ（同点で表紙を選ばない）。"""
+        """Select body slide layout even in sample decks with 1 each of Title, Section, Body (avoid tie-break selecting Title)."""
         from pptx import Presentation
         from measure_deck import measure
         prs = Presentation()
@@ -220,13 +220,13 @@ class HouseDeck(unittest.TestCase):
         sample = self.d / "one_of_each.pptx"
         prs.save(str(sample))
         self.assertEqual(measure(sample)["layout"], "Title and Content")
-        self.assertEqual(measure(sample, layout="Section Header")["layout"], "Section Header")   # 名前で指定もできる
+        self.assertEqual(measure(sample, layout="Section Header")["layout"], "Section Header")   # Can also specify by name
         with self.assertRaises(SystemExit):
             measure(sample, layout="無いレイアウト")
 
     def test_line_break_in_shape_is_not_an_orphan(self):
         r = subprocess.run([sys.executable, str(CHECK), str(self.pages)], capture_output=True, text=True)
-        self.assertNotIn("泣き別れ", r.stdout)   # 矢羽の中の段落内改行を 1 行と数えない
+        self.assertNotIn("泣き別れ", r.stdout)   # Do not count soft break inside chevron shape as single line
 
 
 if __name__ == "__main__":
