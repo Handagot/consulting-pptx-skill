@@ -1,6 +1,7 @@
 ---
 name: consulting-pptx-skill
-description: A skill for producing boardroom-quality presentation slides anchored in the slide design rulebook slide-rules.md. Read the rulebook before drafting, assemble an initial deck from the HTML component libraries (62 archetypes: 27 base + 35 additional), adjust flexibly within the boundaries of the rules without being constrained by archetypes, and finish with 0 FAILs on the automated check_deck.py test. The archetype catalog is an idea book for layouts, not a rigid mold. When provided with an existing PowerPoint file and asked to create insertion pages in PPTX format, build directly on top of that document's master template (slide-rules §8.7). Example triggers: "Create consulting-quality slides", "Build a deck adhering to the rules", "Select from the archetype catalog", "Add pages to this pptx in the same format".
+description: >-
+  A skill for producing boardroom-quality presentation slides anchored in the slide design rulebook slide-rules.md. Read the rulebook before drafting, assemble an initial deck from the HTML component libraries (62 archetypes: 27 base + 35 additional), adjust flexibly within the boundaries of the rules without being constrained by archetypes, and finish with 0 FAILs on the automated check_deck.py test. The archetype catalog is an idea book for layouts, not a rigid mold. When provided with an existing PowerPoint file and asked to create insertion pages in PPTX format, build directly on top of that document's master template (slide-rules §8.7). Example triggers: "Create consulting-quality slides", "Build a deck adhering to the rules", "Select from the archetype catalog", "Add pages to this pptx in the same format".
 ---
 
 # Consulting-Style Slide Creation Skill
