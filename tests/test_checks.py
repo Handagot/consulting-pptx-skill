@@ -15,6 +15,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CHECK = ROOT / "scripts" / "check_deck.py"
 GOOD = (ROOT / "tests" / "fixtures" / "good_deck.html").read_text(encoding="utf8")
+# 利用者の手元の local/old-colors.txt に左右されないよう、レガシー色の検査は外して走らせる
+NO_BRAND = ("--brand", "none")
 
 
 def run(html, *extra):
@@ -25,7 +27,7 @@ def run(html, *extra):
         for a in extra:
             if a.endswith(".txt"):
                 Path(a).write_text("# 架空の禁止語\nサンプル商事\nre:PJ-\\d{3}\n", encoding="utf8")
-        r = subprocess.run([sys.executable, str(CHECK), str(p), *extra], capture_output=True, text=True)
+        r = subprocess.run([sys.executable, str(CHECK), str(p), *NO_BRAND, *extra], capture_output=True, text=True)
     return r.returncode, [l for l in r.stdout.splitlines() if l.startswith("FAIL")]
 
 
@@ -33,13 +35,25 @@ def warns(html):
     with tempfile.TemporaryDirectory() as d:
         p = Path(d) / "deck.html"
         p.write_text(html, encoding="utf8")
-        r = subprocess.run([sys.executable, str(CHECK), str(p)], capture_output=True, text=True)
+        r = subprocess.run([sys.executable, str(CHECK), str(p), *NO_BRAND], capture_output=True, text=True)
     return [l for l in r.stdout.splitlines() if l.startswith("WARN")]
 
 
 def inject(old, new):
     assert old in GOOD, old
     return GOOD.replace(old, new, 1)
+
+
+def run_files(html, files, *extra):
+    """files: {名前: 中身} を一時フォルダに置いてから検査する。extra の @名前 はその置き場所に読み替える"""
+    with tempfile.TemporaryDirectory() as d:
+        for name, body in files.items():
+            (Path(d) / name).write_text(body, encoding="utf8")
+        p = Path(d) / "deck.html"
+        p.write_text(html, encoding="utf8")
+        extra = [str(Path(d) / a[1:]) if a.startswith("@") else a for a in extra]
+        r = subprocess.run([sys.executable, str(CHECK), str(p), *extra], capture_output=True, text=True)
+    return r.returncode, [l for l in r.stdout.splitlines() if l.startswith("FAIL")]
 
 
 class GoodDeck(unittest.TestCase):
@@ -49,7 +63,7 @@ class GoodDeck(unittest.TestCase):
 
     def test_templates_pass_in_template_mode(self):
         for f in ("freeform_parts_16x9.html", "freeform_parts_more_16x9.html"):
-            r = subprocess.run([sys.executable, str(CHECK), str(ROOT / "templates" / f), "--template"],
+            r = subprocess.run([sys.executable, str(CHECK), str(ROOT / "templates" / f), "--template", *NO_BRAND],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, f + r.stdout[-400:])
 
@@ -87,7 +101,7 @@ def run_warns(html):
     with tempfile.TemporaryDirectory() as d:
         p = Path(d) / "deck.html"
         p.write_text(html, encoding="utf8")
-        r = subprocess.run([sys.executable, str(CHECK), str(p)], capture_output=True, text=True)
+        r = subprocess.run([sys.executable, str(CHECK), str(p), *NO_BRAND], capture_output=True, text=True)
     return [l for l in r.stdout.splitlines() if l.startswith("WARN")]
 
 
@@ -141,7 +155,7 @@ def run_out(html):
     with tempfile.TemporaryDirectory() as d:
         p = Path(d) / "deck.html"
         p.write_text(html, encoding="utf8")
-        r = subprocess.run([sys.executable, str(CHECK), str(p)], capture_output=True, text=True)
+        r = subprocess.run([sys.executable, str(CHECK), str(p), *NO_BRAND], capture_output=True, text=True)
     return r.stdout
 
 
@@ -225,6 +239,54 @@ class EmptyArea(unittest.TestCase):
         code, out = self.layout(html)
         self.assertEqual(code, 1, out)
         self.assertIn("p3: 版面の", out)
+
+
+@unittest.skipUnless(_has_playwright(), "npm run setup で playwright を入れると実行される")
+class FillMeaning(unittest.TestCase):
+    """§5.2 表の塗りには同じ色の凡例チップ／§6 表の見出しは塗らない"""
+    ROW = '<tr><td class="ax">試行</td><td>2か月</td><td>営業部</td>'
+    HEAD = '<th class="ax" style="width:52mm">段階</th>'
+    SRC = '<div class="src">出典：架空データ（説明用）</div>\n  </div>\n  <div class="foot"><b>業務自動化の検討</b><span>4</span></div>'
+
+    def layout(self, html):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "deck.html"
+            p.write_text(html, encoding="utf8")
+            r = subprocess.run(["node", str(ROOT / "scripts" / "check_layout.mjs"), str(p)],
+                               capture_output=True, text=True, cwd=ROOT)
+        return r.returncode, r.stdout
+
+    def painted(self):
+        return inject(self.ROW, '<tr><td class="ax">試行</td><td style="background:#e8dcc8">2か月</td><td style="background:#e8dcc8">営業部</td>')
+
+    def test_fill_without_legend_warns(self):
+        code, out = self.layout(self.painted())
+        self.assertIn("凡例チップがない", out)
+
+    def test_fill_with_legend_passes(self):
+        html = self.painted()
+        chip = '<span style="display:inline-block;width:10px;height:10px;background:#e8dcc8"></span> 試行の対象'
+        html = html.replace("<h1>1部門で2か月試行し、効果を確かめてから全社へ広げる</h1>",
+                            "<h1>1部門で2か月試行し、効果を確かめてから全社へ広げる</h1><div class=\"legend\">" + chip + "</div>", 1)
+        code, out = self.layout(html)
+        self.assertNotIn("凡例チップがない", out)
+
+    def test_oklch_fill_without_legend_warns(self):
+        html = inject(self.ROW, '<tr><td class="ax">試行</td><td style="background:oklch(0.9 0.04 80)">2か月</td><td>営業部</td>')
+        code, out = self.layout(html)
+        self.assertIn("凡例チップがない", out)
+
+    def test_oklch_fill_with_legend_passes(self):
+        html = inject(self.ROW, '<tr><td class="ax">試行</td><td style="background:oklch(0.9 0.04 80)">2か月</td><td>営業部</td>')
+        chip = '<span style="display:inline-block;width:10px;height:10px;background:oklch(0.9 0.04 80)"></span> 試行の対象'
+        html = html.replace("<h1>1部門で2か月試行し、効果を確かめてから全社へ広げる</h1>",
+                            "<h1>1部門で2か月試行し、効果を確かめてから全社へ広げる</h1><div class=\"legend\">" + chip + "</div>", 1)
+        code, out = self.layout(html)
+        self.assertNotIn("凡例チップがない", out)
+
+    def test_header_fill_warns(self):
+        code, out = self.layout(inject(self.HEAD, '<th class="ax" style="width:52mm;background:#e8dcc8">段階</th>'))
+        self.assertIn("表の見出しに塗り", out)
 
 
 if __name__ == "__main__":
@@ -556,7 +618,7 @@ class BotFeedback20261019(unittest.TestCase):
             subprocess.run([sys.executable, str(ROOT / "scripts" / "new_deck.py"),
                             "--parts", "b01,b02,b05,m05,b06,m10,b09,m20,b10", "-o", str(out)],
                            capture_output=True, check=True)
-            r = subprocess.run([sys.executable, str(CHECK), str(out)], capture_output=True, text=True, encoding="utf8")
+            r = subprocess.run([sys.executable, str(CHECK), str(out), *NO_BRAND], capture_output=True, text=True, encoding="utf8")
         self.assertFalse(any("右上のラベル" in l for l in r.stdout.splitlines()), r.stdout[-600:])
         self.assertFalse(any("右上のラベル" in l for l in warns(GOOD)))
 
@@ -807,7 +869,7 @@ class StructureF(unittest.TestCase):
             src.write_text("# 出典\n- 月に約120件 社内集計\n", encoding="utf8")
             deck = Path(d) / "deck.html"
             deck.write_text(GOOD, encoding="utf8")
-            r = subprocess.run([sys.executable, str(CHECK), str(deck), "--sources", str(src)], capture_output=True, text=True)
+            r = subprocess.run([sys.executable, str(CHECK), str(deck), *NO_BRAND, "--sources", str(src)], capture_output=True, text=True)
         self.assertIn("出典の控えに無い数字", r.stdout)
 
     def test_sources_match_is_not_substring(self):
@@ -817,7 +879,7 @@ class StructureF(unittest.TestCase):
             src.write_text("# 出典\n- 2025年 社内集計\n", encoding="utf8")
             deck = Path(d) / "deck.html"
             deck.write_text(inject("差し戻しの削減と承認の自動化で、承認待ちを当日に縮める", "利用者は5万人、処理は20倍に増える"), encoding="utf8")
-            r = subprocess.run([sys.executable, str(CHECK), str(deck), "--sources", str(src)], capture_output=True, text=True)
+            r = subprocess.run([sys.executable, str(CHECK), str(deck), *NO_BRAND, "--sources", str(src)], capture_output=True, text=True)
         line = next((l for l in r.stdout.splitlines() if "出典の控えに無い数字" in l), "")
         self.assertIn("「5万」", line)
         self.assertIn("「20倍」", line)
@@ -828,7 +890,7 @@ class StructureF(unittest.TestCase):
             src.write_text("# 出典\n- 12,000件 社内集計\n", encoding="utf8")
             deck = Path(d) / "deck.html"
             deck.write_text(inject("差し戻しの削減と承認の自動化で、承認待ちを当日に縮める", "申請は年12000件に達する"), encoding="utf8")
-            r = subprocess.run([sys.executable, str(CHECK), str(deck), "--sources", str(src)], capture_output=True, text=True)
+            r = subprocess.run([sys.executable, str(CHECK), str(deck), *NO_BRAND, "--sources", str(src)], capture_output=True, text=True)
         self.assertNotIn("「12000件」", r.stdout)
 
     def test_check_all_fails_when_a_checker_crashes(self):
@@ -844,7 +906,7 @@ class StructureF(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             deck = Path(d) / "deck.html"
             deck.write_text(GOOD, encoding="utf8")
-            r = subprocess.run([sys.executable, str(CHECK), str(deck), "--sources", str(Path(d) / "nope.md")], capture_output=True, text=True)
+            r = subprocess.run([sys.executable, str(CHECK), str(deck), *NO_BRAND, "--sources", str(Path(d) / "nope.md")], capture_output=True, text=True)
         self.assertIn("出典の控え", r.stdout)
         self.assertEqual(r.returncode, 1)
 
@@ -1269,7 +1331,7 @@ class ReviewFixes20261022(unittest.TestCase):
             out = []
             for cls in ("s", "s std"):
                 deck.write_text("<html><body>" + self.page("<p>申請は月約1,200件</p>") + self.page("<p>従業員は4,321人</p>", cls) + "</body></html>", encoding="utf8")
-                r = subprocess.run([sys.executable, str(CHECK), str(deck), "--sources", str(src)], capture_output=True, text=True)
+                r = subprocess.run([sys.executable, str(CHECK), str(deck), *NO_BRAND, "--sources", str(src)], capture_output=True, text=True)
                 out.append(r.stdout)
         self.assertIn("「4,321人」", out[0])
         self.assertNotIn("「4,321人」", out[1])
@@ -1372,3 +1434,265 @@ class LayoutReviewFixes20261022(LayoutFeedback20261012):
         body = ('<div style="height:40px;border-bottom:2px solid #333">指標名、単位</div>'
                 '<div style="margin-top:-18px;font-size:20px;font-weight:700">48.5</div><div style="height:300px;border:1px solid #333">図</div>')
         self.assertTrue(any("罫線に重なっている" in l for l in self.layout(body)))
+
+
+class AxisNameInHeaderBand(unittest.TestCase):
+    # §4.102: 見出し行の左端セルを空欄にしない
+    def test_empty_header_corner_fires(self):
+        code, fails = run(inject('<th class="ax" style="width:52mm">段階</th>', '<th class="ax" style="width:52mm"></th>'))
+        self.assertEqual(code, 1)
+        self.assertTrue(any("§4.102" in f for f in fails), fails)
+
+    def test_named_header_corner_passes(self):
+        code, fails = run(GOOD)
+        self.assertFalse(any("§4.102" in f for f in fails), fails)
+
+
+class AppendixDivider(unittest.TestCase):
+    # §4.100: 本編と付録の間に区切りのスライドを挟む
+    APPX = '<section class="s"><div class="tag">付録</div><h1>付録：試行した営業部では、承認待ちの平均が3日から当日に縮んだ</h1><p>営業部は平均3日から当日に縮んだ</p><div class="foot"><b>業務自動化の検討</b><span>5</span></div></section>\n'
+    DIV = '<section class="s"><h1>Appendix</h1><p>部門別の数字</p></section>\n'
+    TABLE = '<table><tr><th>部門</th><th>試行前</th><th>試行後</th></tr><tr><td>営業部</td><td>3日</td><td>当日</td></tr></table>'
+
+    def _deck(self, extra):
+        # 裏表紙（最後の cover）の手前に差し込む
+        head, sep, tail = GOOD.rpartition('<section class="s cover">')
+        return head + extra + sep + tail
+
+    def _fires(self, extra):
+        code, fails = run(self._deck(extra))
+        return any("§4.100" in f for f in fails), fails
+
+    def test_appendix_without_divider_fires(self):
+        fired, fails = self._fires(self.APPX)
+        self.assertTrue(fired, fails)
+
+    def test_appendix_with_divider_passes(self):
+        fired, fails = self._fires(self.DIV + self.APPX)
+        self.assertFalse(fired, fails)
+
+    def test_labelled_dividers_pass(self):
+        # 区切りのタイトルに番号・短い名詞句が付いていても区切りとして数える
+        for ttl in ("Appendix A", "Appendix 1", "付録 A", "Appendix｜部門別の数字", "APPENDIX：参考の数字"):
+            with self.subTest(ttl=ttl):
+                div = f'<section class="s"><h1>{ttl}</h1><p>部門別の数字</p></section>\n'
+                fired, fails = self._fires(div + self.APPX)
+                self.assertFalse(fired, fails)
+
+    def test_short_appendix_page_is_not_its_own_divider(self):
+        # 「付録：」の後ろが短い付録ページは、区切りが無ければ FAIL（自分自身を区切りに数えない）
+        page = '<section class="s"><h1>付録：営業部では承認待ちが当日に縮んだ</h1><p>営業部は平均3日から当日に縮んだ</p><div class="foot"><b>業務自動化の検討</b><span>5</span></div></section>\n'
+        fired, fails = self._fires(page)
+        self.assertTrue(fired, fails)
+
+    def test_divider_with_table_is_not_a_divider(self):
+        # タイトルが「Appendix」でも表が載っていれば付録の中身のページ
+        page = f'<section class="s"><h1>Appendix</h1>{self.TABLE}<div class="foot"><b>業務自動化の検討</b><span>5</span></div></section>\n'
+        fired, fails = self._fires(page)
+        self.assertTrue(fired, fails)
+
+    def test_main_body_title_starting_with_furoku_passes(self):
+        # 本編で「付録の手順書…」のように付録で始まるタイトルは付録ページではない
+        page = '<section class="s"><h1>付録の手順書を改め、承認の待ち時間を当日に縮める</h1><p>営業部から順に手順書を差し替える</p><div class="foot"><b>業務自動化の検討</b><span>5</span></div></section>\n'
+        fired, fails = self._fires(page)
+        self.assertFalse(fired, fails)
+
+    def test_tag_chip_after_bar_fires(self):
+        # 資料名・日付の帯（.bar）から始まるページでも、タグチップ「appendix」（小文字）で付録と分かる
+        page = ('<section class="s"><div class="bar"><div class="logo">資料名</div><div class="date">2026.10</div></div>'
+                f'<div class="tag">appendix</div><h1>試行した営業部では、承認待ちの平均が3日から当日に縮んだ</h1>{self.TABLE}'
+                '<div class="foot"><b>業務自動化の検討</b><span>5</span></div></section>\n')
+        fired, fails = self._fires(page)
+        self.assertTrue(fired, fails)
+        fired, fails = self._fires(self.DIV + page)
+        self.assertFalse(fired, fails)
+
+    def test_agenda_listing_appendix_is_not_an_appendix_page(self):
+        # アジェンダの項目・表のセルの「Appendix」「付録」はタグではない（後ろに正しい区切りがあれば通る）
+        agendas = (
+            '<section class="s"><h1>アジェンダ</h1><ol><li>現状の課題</li><li>打ち手</li><li>Appendix</li></ol></section>\n',
+            '<section class="s"><h1>営業部から順に承認の手順を差し替える</h1><table><tr><th>章</th><th>内容</th></tr>'
+            '<tr><td>付録</td><td>部門別の数字</td></tr></table><div class="foot"><b>業務自動化の検討</b><span>3</span></div></section>\n',
+        )
+        for agenda in agendas:
+            with self.subTest(agenda=agenda[:40]):
+                head, sep, tail = GOOD.partition('</section>')
+                deck = head + sep + "\n" + agenda + tail
+                head, sep, tail = deck.rpartition('<section class="s cover">')
+                code, fails = run(head + self.DIV + self.APPX + sep + tail)
+                self.assertFalse(any("§4.100" in f for f in fails), fails)
+
+    def test_divider_with_bracket_passes(self):
+        # 「参考資料（部門別）」のように括弧が続く区切りも区切りとして数える
+        div = '<section class="s"><h1>参考資料（部門別）</h1><p>部門別の数字</p></section>\n'
+        fired, fails = self._fires(div + self.APPX)
+        self.assertFalse(fired, fails)
+
+
+def run_raw(html, files, *extra):
+    """run_files と同じだが、終了コード・標準出力・標準エラーをそのまま返す"""
+    with tempfile.TemporaryDirectory() as d:
+        for name, body in files.items():
+            (Path(d) / name).write_text(body, encoding="utf8")
+        p = Path(d) / "deck.html"
+        p.write_text(html, encoding="utf8")
+        extra = [str(Path(d) / a[1:]) if a.startswith("@") else a for a in extra]
+        return subprocess.run([sys.executable, str(CHECK), str(p), *extra], capture_output=True, text=True)
+
+
+class OldColors(unittest.TestCase):
+    # 自社のレガシー色は本体に書かず、local/old-colors.txt か --old-colors で渡す
+    def test_listed_color_fires(self):
+        code, fails = run_files(GOOD, {"old.colors": "# 旧ブランド色\n#8A8F94\n"}, "--old-colors", "@old.colors")
+        self.assertEqual(code, 1)
+        self.assertTrue(any("8A8F94" in f for f in fails), fails)
+
+    def test_brand_none_skips(self):
+        code, fails = run_files(GOOD, {"old.colors": "8A8F94\n"}, "--old-colors", "@old.colors", "--brand", "none")
+        self.assertFalse(any("禁止色" in f for f in fails), fails)
+
+    def test_no_list_no_check(self):
+        code, fails = run(GOOD)
+        self.assertFalse(any("禁止色" in f for f in fails), fails)
+
+    def test_line_formats_are_read(self):
+        # 後ろの説明・空白1つの「# コメント」・BOM 付き・小文字でも色を読む
+        for body in ("8A8F94 # old\n", "﻿8A8F94\n", "#8A8F94 旧グレー\n", "8a8f94\n", "  #8A8F94\t# 旧\n"):
+            with self.subTest(body=body):
+                code, fails = run_files(GOOD, {"old.colors": body}, "--old-colors", "@old.colors")
+                self.assertTrue(any("8A8F94" in f for f in fails), fails)
+
+    def test_unreadable_line_warns_and_short_value_does_not_match(self):
+        # 6桁でない値は読み飛ばして WARN。短い値で部分一致させない。「#」付きの3桁もコメント扱いにしない
+        for body in ("8A8\n", "#8A8 旧色\n"):
+            with self.subTest(body=body):
+                r = run_raw(GOOD, {"old.colors": body}, "--old-colors", "@old.colors")
+                self.assertFalse(any("禁止色" in l for l in r.stdout.splitlines() if l.startswith("FAIL")), r.stdout[-400:])
+                self.assertTrue(any(l.startswith("WARN") and "読めない" in l for l in r.stdout.splitlines()), r.stdout[-400:])
+
+    def test_eight_digit_hex_matches(self):
+        # 透明度つきの8桁（デッキ側・一覧側とも）は先頭6桁の色として扱う
+        html = GOOD.replace("#8a8f94", "#8a8f94cc")
+        for body in ("8A8F94\n", "#8A8F94CC\n"):
+            with self.subTest(body=body):
+                code, fails = run_files(html, {"old.colors": body}, "--old-colors", "@old.colors")
+                self.assertTrue(any("8A8F94" in f for f in fails), fails)
+
+    def test_brand_none_with_old_colors_says_so(self):
+        r = run_raw(GOOD, {"old.colors": "8A8F94\n"}, "--old-colors", "@old.colors", "--brand", "none")
+        self.assertIn("--brand none", r.stderr)
+
+    def test_color_inside_longer_hex_does_not_match(self):
+        html = GOOD.replace("#8a8f94", "#8a8f9")  # 8A8F94 を消す
+        html = html.replace("</style>", ".z{color:#18A8F94}</style>", 1)  # 前後に16進が続く並び
+        code, fails = run_files(html, {"old.colors": "8A8F94\n"}, "--old-colors", "@old.colors")
+        self.assertFalse(any("禁止色" in f for f in fails), fails)
+
+
+class CheckDeckArgs(unittest.TestCase):
+    # 引数・設定ファイルの誤りは traceback を出さず、理由を出して終える
+    def _assert_usage_error(self, r, word):
+        self.assertEqual(r.returncode, 2, r.stdout[-300:] + r.stderr[-300:])
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertIn(word, r.stderr)
+
+    def test_missing_old_colors_file(self):
+        self._assert_usage_error(run_raw(GOOD, {}, "--old-colors", "@nothing.txt"), "見つからない")
+
+    def test_brand_without_value(self):
+        self._assert_usage_error(run_raw(GOOD, {}, "--brand"), "--brand")
+
+    def test_unknown_brand_value(self):
+        self._assert_usage_error(run_raw(GOOD, {}, "--brand", "acme"), "acme")
+
+
+@unittest.skipUnless(_has_pptx(), "python-pptx が入っていると実行される")
+class PptxAppendixAndAxisNames(unittest.TestCase):
+    """§4.100・§4.102 の PPTX 版"""
+
+    def _check(self, pages):
+        """pages: [(タイトル, 本文 or None, 表 or None)]。表は (見出しを太字にするか, firstRow, 行のリスト)"""
+        from pptx import Presentation
+        from pptx.util import Inches, Pt
+        prs = Presentation()
+        prs.slide_width, prs.slide_height = Inches(13.333), Inches(7.5)
+        for title, body, table, *tag in pages:
+            s = prs.slides.add_slide(prs.slide_layouts[5])
+            s.shapes.title.text = title
+            if tag:  # 上端の小さいタグチップ
+                s.shapes.add_textbox(Inches(0.5), Inches(0.15), Inches(1.2), Inches(0.4)).text_frame.text = tag[0]
+            if body:
+                s.shapes.add_textbox(Inches(1), Inches(2), Inches(10), Inches(1)).text_frame.text = body
+            if table:
+                bold_head, first_row, rows = table
+                gf = s.shapes.add_table(len(rows), len(rows[0]), Inches(1), Inches(3), Inches(10), Inches(2))
+                gf.table.first_row = first_row
+                for r, row in enumerate(rows):
+                    for c, v in enumerate(row):
+                        cell = gf.table.cell(r, c)
+                        cell.text = v
+                        for para in cell.text_frame.paragraphs:
+                            for run_ in para.runs:
+                                run_.font.bold = bold_head and r == 0
+                                run_.font.size = Pt(12)
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "deck.pptx"
+            prs.save(path)
+            r = subprocess.run([sys.executable, str(CHECK), str(path), *NO_BRAND], capture_output=True, text=True)
+        return [l for l in r.stdout.splitlines() if l.startswith("FAIL")]
+
+    BODY = ("営業部の承認待ちを当日に縮める", "営業部から順に差し替える", None)
+    ROWS = [["部門", "試行前", "試行後"], ["営業部", "3日", "当日"]]
+    NO_CORNER = [["", "試行前", "試行後"], ["営業部", "3日", "当日"]]
+
+    def _deck(self, *pages):
+        return [("業務自動化の検討", "2026年10月", None), self.BODY, *pages]
+
+    def test_appendix_without_divider_fires(self):
+        fails = self._check(self._deck(("付録：試行した営業部では承認待ちの平均が当日に縮んだ", None, (True, False, self.ROWS))))
+        self.assertTrue(any("§4.100" in f for f in fails), fails)
+
+    def test_labelled_divider_passes(self):
+        for ttl in ("Appendix A", "付録 A", "Appendix｜部門別の数字"):
+            with self.subTest(ttl=ttl):
+                fails = self._check(self._deck((ttl, "部門別の数字", None),
+                                               ("付録：試行した営業部では承認待ちの平均が当日に縮んだ", None, (True, False, self.ROWS))))
+                self.assertFalse(any("§4.100" in f for f in fails), fails)
+
+    def test_agenda_item_is_not_a_tag(self):
+        # アジェンダや本文にある「Appendix」だけの図形はタグではない（後ろに区切りがあれば通る）
+        appx = ("付録：試行した営業部では承認待ちの平均が当日に縮んだ", None, (True, False, self.ROWS))
+        for page in (("アジェンダ", "Appendix", None), ("営業部から順に承認の手順を差し替える", "Appendix", None)):
+            with self.subTest(title=page[0]):
+                fails = self._check(self._deck(page, ("Appendix", "部門別の数字", None), appx))
+                self.assertFalse(any("§4.100" in f for f in fails), fails)
+
+    def test_tag_chip_at_top_fires(self):
+        page = ("試行した営業部では承認待ちの平均が当日に縮んだ", None, (True, False, self.ROWS), "付録")
+        fails = self._check(self._deck(page))
+        self.assertTrue(any("§4.100" in f for f in fails), fails)
+        fails = self._check(self._deck(("Appendix", "部門別の数字", None), page))
+        self.assertFalse(any("§4.100" in f for f in fails), fails)
+
+    def test_short_appendix_page_fires(self):
+        fails = self._check(self._deck(("付録：営業部では承認待ちが当日に縮んだ", "営業部は平均3日から当日に縮んだ", None)))
+        self.assertTrue(any("§4.100" in f for f in fails), fails)
+
+    def test_main_body_title_starting_with_furoku_passes(self):
+        fails = self._check(self._deck(("付録の手順書を改め、承認の待ち時間を当日に縮める", "営業部から順に手順書を差し替える", None)))
+        self.assertFalse(any("§4.100" in f for f in fails), fails)
+
+    def test_empty_corner_in_header_fires(self):
+        for first_row, bold in ((False, True), (True, False)):
+            with self.subTest(first_row=first_row, bold=bold):
+                fails = self._check(self._deck(("部門ごとに承認待ちの日数を比べる", None, (bold, first_row, self.NO_CORNER))))
+                self.assertTrue(any("§4.102" in f for f in fails), fails)
+
+    def test_table_without_header_passes(self):
+        # 見出しの無い表（太字でも firstRow でもない）は、左上が空欄でも対象外
+        fails = self._check(self._deck(("部門ごとに承認待ちの日数を比べる", None, (False, False, self.NO_CORNER))))
+        self.assertFalse(any("§4.102" in f for f in fails), fails)
+
+    def test_named_corner_passes(self):
+        fails = self._check(self._deck(("部門ごとに承認待ちの日数を比べる", None, (True, True, self.ROWS))))
+        self.assertFalse(any("§4.102" in f for f in fails), fails)

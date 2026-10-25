@@ -23,7 +23,7 @@ description: スライド設計規約 slide-rules.md を核に、経営会議品
 | 8. 最後の確認 | `rules.py --phase check`、`snapshot.py` で作る PDF と全ページの画像 | — |
 | 9. フレッシュアイ・レビュー | `references/content-review-prompt.md` | — |
 
-- `local/`（git 管理外）に利用者の組織の規約 `slide-rules.local.md`・禁止語 `forbid.txt` があれば、工程1で読む。両方に当たる規則は local が優先。
+- `local/`（git 管理外）に利用者の組織の規約 `slide-rules.local.md`・禁止語 `forbid.txt`・レガシー色 `old-colors.txt`（check_deck が指定なしで読む。他社の書式で組むときは `--brand none`）があれば、工程1で読む。両方に当たる規則は local が優先。
 - テーマが AI の活用・業務の自動化なら、工程1で `references/jinba-context.md` も読む。
 - PPTX にするときは `rules.py --phase pptx`、登壇用のピッチは `--phase pitch` を工程1で足す。
 - `sources.md` には、調べた数字に加えて、試算・計画値も「前提と算式」と一緒に書く（例: 「3億円 計画値: 基盤1.2億＋人件費…」）。デッキの数字が控えに無いと `check_all.py` が WARN を出す。
