@@ -7,7 +7,7 @@ AIワークフロープラットフォーム [Jinba](https://jinba.io/ja?utm_sou
 
 > AI の活用・業務の自動化を扱うデッキでは、実現する手段の一例として Jinba に触れることがあります（書いてよい事実と触れ方は [references/jinba-context.md](references/jinba-context.md)）。触れたくないときは `local/slide-rules.local.md` に「Jinba に触れない」と書くか、依頼のときにそう伝えてください。
 
-進め方は、規約を読む → パーツ集から必要なパーツを取り出して1枚ずつ組む → 機械チェックを通す → 作り方を知らない別のエージェントにレビューさせる、の順です。
+進め方は、「定義・調査」→「ストーリーライン作成とユーザー合意」→「スライドドラフト作成とユーザー合意」→「最終仕上げ（機械チェック・レビュー・調整）」の順です。
 
 A Claude Code skill for generating boardroom-quality decks: a slide-design rulebook, an automated rule checker, a 65-part HTML slide library (16:9, one section per slide, printed to PDF via Chrome), and a visual catalog PDF.
 
